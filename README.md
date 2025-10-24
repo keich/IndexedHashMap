@@ -91,7 +91,7 @@ store.addIndex(TestEntity.FIELD_NAME, IndexType.EQUAL, TestEntity::getNameForInd
 3. Query object from store
 
 ```java
-QueryPredicate repdicate = Predicates.notEqual(TestEntity.FIELD_NAME, NAME1_VALUE);
+QueryPredicate repdicate = Predicates.notEqual(TestEntity.FIELD_NAME, "Hello world");
 Set<String> result = store.keySet(repdicate);
 result.forEach(key -> {
 	System.out.println(store.get(key));
@@ -100,7 +100,9 @@ result.forEach(key -> {
 
 ### Index data type support
 
-| Operator | Вescription  | Long | Class String  | Class Map.Entry | Class Set               |
+Any object with hash and equal or implement Comparable.(depending on predicate)
+
+| Operator | Description  | Long | Class String  | Class Map.Entry | Class Set               |
 | -------- | ------------ | -----| ------------- | --------------- | ----------------------- |
 | NE       | Not equal    | ok   | ok            | Undefined behavior | Undefined behavior. Use NI |
 | EQ       | Equal        | ok   | ok            | Equal key and value | Return object with set contains object  |
@@ -112,12 +114,32 @@ result.forEach(key -> {
 | NI       | Not include(uses for Set)  | Undefined behavior  |    vice versa CO   |   Undefined behavior  |  Return object with set not contains object |
 
 
+### Index types
 
+| Index class    | Description             |
+| -------------- | ----------------------- |
+| IndexEqual     | Index from HashMap      |
+| IndexLongUniq  | Index from TreeMap for uniq Long values |
+| IndexSorted    | Index from TreeMap for Objects implemented Comparable |
+| IndexSortedUniq | Index from TreeMap for uniq Objects implemented Comparable |
+| IndexStatus | Index for class BaseStatus |
 
+## Work without indexes
 
+1. Do before insert data
 
+```java
+store.addQueryField(TestEntity.FIELD_NAME, TestEntity::getSomeSetForIndex);
+```
+2. Query object from store
 
-
+```java
+QueryPredicate repdicate = Predicates.notEqual(TestEntity.FIELD_NAME, "Hello world");
+Set<String> result = store.keySet(repdicate);
+result.forEach(key -> {
+	System.out.println(store.get(key));
+});
+```
 
 
 
