@@ -67,7 +67,7 @@ IndexedHashMap<String, TestEntity> store = new IndexedHashMap<>(null,
 TestEntity entity = new TestEntity("key1", "Hello word", 1L, Collections.emptySet()
 		, Collections.emptyMap());
 store.put(entity);
-TestEntity result = store.get("key1");
+Optional<TestEntity> result = store.get("key1");
 ```
 
 
