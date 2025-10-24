@@ -98,6 +98,19 @@ result.forEach(key -> {
 });
 ```
 
+### Index data type support
+
+| Operator | Вescription  | Long | Class String  | Class Map.Entry | Class Set               |
+| -------- | ------------ | -----| ------------- | --------------- | ----------------------- |
+| NE       | Not equal    | ok   | ok            | Undefined behavior | Undefined behavior. Use NI |
+| EQ       | Equal        | ok   | ok            | Equal key and value | Return object with set contains object  |
+| LT       | Less than    | ok   | ok            | Exception   | Exception  |
+| GT       | Gather than  | ok   | ok            | Exception   | Exception  |
+| GE       | Gather equal | ok   | ok            | Exception   | Exception  |
+| CO       | Contain      | Undefined behavior | search sub string | search Entry key equal and value sub string  |
+| NC       | Not contain  | Undefined behavior  | vice versa CO |  vice versa CO  | Some string in set has sub string |
+| NI       | Not include(uses for Set)  | Undefined behavior  |    vice versa CO   |   Undefined behavior  |  Return object with set not contains object |
+
 
 
 
