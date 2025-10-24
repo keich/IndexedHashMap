@@ -65,6 +65,24 @@ store.put(entity);
 Optional<TestEntity> result = store.get("key1");
 ```
 
+4. Lock object for insert or update
+
+```java
+store.compute("key1", obj -> {
+	// Object with key1 missing
+	if(obj == null) {
+		//Insert
+		return new TestEntity("key1", "Hello word", 1L, Collections.emptySet()
+				, Collections.emptyMap());
+	}
+	// Object exists
+	// Replace
+	return new TestEntity("key1", "Hello word", 1L, Collections.emptySet()
+			, Collections.emptyMap());
+	// Or remove
+	//return null;
+});
+```
 
 ## Work with indexes
 
