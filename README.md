@@ -1,14 +1,11 @@
-<!-- ABOUT THE PROJECT -->
 
 # About The Project
 ConcurrentHashMap with indexing technology that improve performance. 
 Used as an in-memory key-value database for Objects.
 
-<!-- GETTING STARTED -->
-
 # Getting Started
 
-1. Clone the repo
+1. Clone the repository
 
 ```sh
    git clone https://github.com/github_username/repo_name.git
@@ -19,7 +16,7 @@ Used as an in-memory key-value database for Objects.
    npm install
 ```
 
-3. Add dependency
+3. Add dependency to your project
 
 ```sh
   	<dependency>
@@ -28,8 +25,6 @@ Used as an in-memory key-value database for Objects.
   		<version>0.0.1</version>
   	</dependency>
 ```
-
-<!-- GETTING STARTED -->
 
 ## Usage 
 
@@ -88,7 +83,7 @@ public static Set<Object> getNameForIndex(TestEntity e) {
 store.addIndex(TestEntity.FIELD_NAME, IndexType.EQUAL, TestEntity::getNameForIndex);
 ```
 
-3. Query object from store
+3. Query objects from store
 
 ```java
 QueryPredicate repdicate = Predicates.notEqual(TestEntity.FIELD_NAME, "Hello world");
@@ -131,11 +126,11 @@ Any object with hash and equal or implement Comparable.(depending on predicate)
 ```java
 store.addQueryField(TestEntity.FIELD_NAME, TestEntity::getSomeSetForIndex);
 ```
-2. Query object from store
+2. Query objects from store
 
 ```java
-QueryPredicate repdicate = Predicates.notEqual(TestEntity.FIELD_NAME, "Hello world");
-Set<String> result = store.keySet(repdicate);
+QueryPredicate predicate = Predicates.notEqual(TestEntity.FIELD_NAME, "Hello world");
+Set<String> result = store.keySet(predicate);
 result.forEach(key -> {
 	System.out.println(store.get(key));
 });
