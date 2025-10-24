@@ -40,6 +40,14 @@ public class QuerySort implements Comparable<QuerySort> {
 		this.order = order;
 	}
 
+	public String getName() {
+		return name;
+	}
+	
+	public Operator getOperator() {
+		return operator;
+	}
+	
 	public static QuerySort error(String name, Object value) {
 		return new QuerySort(name, Operator.ERROR, 0);
 	}
