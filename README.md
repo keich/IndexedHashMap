@@ -1,31 +1,40 @@
 <!-- ABOUT THE PROJECT -->
+
 # About The Project
 ConcurrentHashMap with indexing technology that improve performance. 
 Used as an in-memory key-value database for Objects.
 
 <!-- GETTING STARTED -->
+
 # Getting Started
 
 1. Clone the repo
-   ```sh
+
+```sh
    git clone https://github.com/github_username/repo_name.git
-   ```
+```
 2. Install NPM packages
-   ```sh
+
+```sh
    npm install
+```
 
 3. Add dependency
-   ```sh
+
+```sh
   	<dependency>
   		<groupId>ru.keich.mon</groupId>
   		<artifactId>IndexedHashMap</artifactId>
   		<version>0.0.1</version>
   	</dependency>
+```
 
 <!-- GETTING STARTED -->
+
 ## Usage 
 
-1. Create class extended BaseEntity;
+1. Create class extended BaseEntity
+
 ```java
 public class TestEntity extends BaseEntity<String> {
 
@@ -44,13 +53,16 @@ public class TestEntity extends BaseEntity<String> {
 	}
 }
 ```
+
 2. Create instance of IndexedHashMap
+
 ```java
 IndexedHashMap<String, TestEntity> store = new IndexedHashMap<>(null,
 		this.getClass().getSimpleName());
 ```
 
 3. Put and get data
+
 ```java
 TestEntity entity = new TestEntity("key1", "Hello word", 1L, Collections.emptySet()
 		, Collections.emptyMap());
