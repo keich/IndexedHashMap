@@ -71,6 +71,40 @@ TestEntity result = store.get("key1");
 ```
 
 
-4. 
+## Work with indexes
+
+1. Determine what data to put in the index 
+
+```java
+public static final String FIELD_NAME = "name";
+      
+public static Set<Object> getNameForIndex(TestEntity e) {
+	return Collections.singleton(e.getName());
+}       
+```
+2. Do before insert data
+
+```java
+store.addIndex(TestEntity.FIELD_NAME, IndexType.EQUAL, TestEntity::getNameForIndex);
+```
+
+3. Query object from store
+
+```java
+QueryPredicate repdicate = Predicates.notEqual(TestEntity.FIELD_NAME, NAME1_VALUE);
+Set<String> result = store.keySet(repdicate);
+result.forEach(key -> {
+	System.out.println(store.get(key));
+});
+```
+
+
+
+
+
+
+
+
+
 
 
