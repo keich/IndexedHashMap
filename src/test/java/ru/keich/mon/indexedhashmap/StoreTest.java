@@ -68,9 +68,9 @@ public class StoreTest {
 		var entity3 = new TestEntity(ID3_VALUE, NAME3_VALUE, VERSION3_VALUE,
 				Set.of(SET31_VALUE, SET32_VALUE, SET33_VALUE),
 				Map.ofEntries(ENTRY31_VALUE, ENTRY32_VALUE, ENTRY33_VALUE));
-		store.put(entity1);
-		store.put(entity2);
-		store.put(entity3);
+		store.put(entity1.getId(), entity1);
+		store.put(entity2.getId(), entity2);
+		store.put(entity3.getId(), entity3);
 	}
 
 	private void queryEqual(IndexedHashMap<String, TestEntity> store) {

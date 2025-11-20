@@ -34,7 +34,7 @@ import ru.keich.mon.indexedhashmap.query.predicates.QueryPredicate;
  * limitations under the License.
  */
 
-public class IndexedHashMap<K, T extends BaseEntity<K>> {
+public class IndexedHashMap<K, T> {
 
 	static final public String METRIC_NAME_MAP = "indexedhashmap_";
 	static final public String METRIC_NAME_OPERATION = "operation";
@@ -141,54 +141,54 @@ public class IndexedHashMap<K, T extends BaseEntity<K>> {
 		query.put(name, new QueryObject<T>(mapper));
 	}
 
-	public Optional<T> put(T entity) {
-		return compute(entity.getId(), (oldEntity) -> {
-			if (oldEntity == null) {
-				return entity;
+	public Optional<T> put(K id, T obj) {
+		return compute(id, (oldObj) -> {
+			if (oldObj == null) {
+				return obj;
 			}
-			return oldEntity;
+			return oldObj;
 		});
 	}
 
-	private T removeEntity(K id, T entity) {
+	private T remove(K id, T obj) {
 		for (var entry : index.entrySet()) {
-			entry.getValue().remove(id, entity);
+			entry.getValue().remove(id, obj);
 		}
 		metricRemoved.increment();
 		return null;
 	}
 
-	private T updateEntity(K id, T oldEntity, T newEntity) {
+	private T update(K id, T oldObj, T newObj) {
 		for (var entry : index.entrySet()) {
-			entry.getValue().removeOldAndAppend(id, oldEntity, newEntity);
+			entry.getValue().removeOldAndAppend(id, oldObj, newObj);
 		}
 		metricUpdated.increment();
-		return newEntity;
+		return newObj;
 	}
 
-	private T insertEntity(K id, T entity) {
+	private T insert(K id, T obj) {
 		for (var entry : index.entrySet()) {
-			entry.getValue().append(id, entity);
+			entry.getValue().append(id, obj);
 		}
 		metricAdded.increment();
-		return entity;
+		return obj;
 	}
 
 	public Optional<T> compute(K id, Function<T, T> updateTrigger) {
 		metricObjectsSize.set(cache.size());
-		return Optional.ofNullable(cache.compute(id, (key, oldEntity) -> {
-			var newEntity = updateTrigger.apply(oldEntity);
-			if (newEntity == null) {
-				if (oldEntity != null) {
-					return removeEntity(id, oldEntity);
+		return Optional.ofNullable(cache.compute(id, (key, oldObj) -> {
+			var newObj = updateTrigger.apply(oldObj);
+			if (newObj == null) {
+				if (oldObj != null) {
+					return remove(id, oldObj);
 				}
-			} else if (newEntity != oldEntity) {
-				if (oldEntity != null) {
-					return updateEntity(id, oldEntity, newEntity);
+			} else if (newObj != oldObj) {
+				if (oldObj != null) {
+					return update(id, oldObj, newObj);
 				}
-				return insertEntity(id, newEntity);
+				return insert(id, newObj);
 			}
-			return oldEntity;
+			return oldObj;
 		}));
 	}
 

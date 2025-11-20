@@ -24,20 +24,22 @@ import ru.keich.mon.indexedhashmap.query.predicates.QueryPredicate;
  * limitations under the License.
  */
 
-public class TestEntity extends BaseEntity<String> {
+public class TestEntity {
 
 	public static final String FIELD_NAME = "name";
 	public static final String FIELD_SOMESET = "someSet";
 	public static final String FIELD_SOMEMAP = "someMap";
 	public static final String FIELD_VERSION = "version";
+	public static final String FIELD_ID = "id";
 
+	private final String id;
 	private final String name;
 	private final Long version;
 	private final Set<String> someSet;
 	private final Map<String, String> someMap;
 
 	public TestEntity(String id, String name, Long version, Set<String> someSet, Map<String, String> someMap) {
-		super(id);
+		this.id = id;
 		this.name = name;
 		this.version = version;
 		this.someSet = someSet;
@@ -83,6 +85,15 @@ public class TestEntity extends BaseEntity<String> {
 
 	public static boolean testVersion(TestEntity e, QueryPredicate predicate) {
 		return predicate.test(e.getVersion());
+	}
+	
+	public String getId() {
+		return id;
+	}
+
+	@Override
+	public int hashCode() {
+		return id.hashCode();
 	}
 
 	@Override
