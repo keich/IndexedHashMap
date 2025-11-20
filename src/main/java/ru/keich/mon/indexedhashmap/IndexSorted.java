@@ -27,7 +27,7 @@ import java.util.function.Predicate;
  * limitations under the License.
  */
 
-public class IndexSorted<K, T extends BaseEntity<K>> implements Index<K, T> {
+public class IndexSorted<K, T> implements Index<K, T> {
 	private static final Object PRESENT = new Object();
 	private final Function<T, Set<Object>> mapper;
 	private final SortedMap<Object, Map<K, Object>> objects = new TreeMap<>();
@@ -72,14 +72,14 @@ public class IndexSorted<K, T extends BaseEntity<K>> implements Index<K, T> {
 	}
 
 	@Override
-	public synchronized void append(T entity) {
-		mapper.apply(entity).forEach(key -> put(key, entity.getId()));
+	public synchronized void append(K id, T obj) {
+		mapper.apply(obj).forEach(key -> put(key, id));
 		metricObjectsSize.set(objects.size());
 	}
 
 	@Override
-	public synchronized void remove(final T entity) {
-		mapper.apply(entity).forEach(key -> del(key, entity.getId()));
+	public synchronized void remove(K id, T obj) {
+		mapper.apply(obj).forEach(key -> del(key, id));
 		metricObjectsSize.set(objects.size());
 	}
 
@@ -134,10 +134,9 @@ public class IndexSorted<K, T extends BaseEntity<K>> implements Index<K, T> {
 	}
 
 	@Override
-	public synchronized void removeOldAndAppend(T oldEntity, T newEntity) {
-		final K id = newEntity.getId();
-		var oldSet = mapper.apply(oldEntity);
-		var newSet = mapper.apply(newEntity);
+	public synchronized void removeOldAndAppend(K id, T oldObj, T newObj) {
+		var oldSet = mapper.apply(oldObj);
+		var newSet = mapper.apply(newObj);
 
 		for (var key : oldSet) {
 			if (!newSet.contains(key)) {

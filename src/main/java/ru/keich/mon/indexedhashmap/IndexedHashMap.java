@@ -150,43 +150,43 @@ public class IndexedHashMap<K, T extends BaseEntity<K>> {
 		});
 	}
 
-	private T removeEntity(T entity) {
+	private T removeEntity(K id, T entity) {
 		for (var entry : index.entrySet()) {
-			entry.getValue().remove(entity);
+			entry.getValue().remove(id, entity);
 		}
 		metricRemoved.increment();
 		return null;
 	}
 
-	private T updateEntity(T oldEntity, T newEntity) {
+	private T updateEntity(K id, T oldEntity, T newEntity) {
 		for (var entry : index.entrySet()) {
-			entry.getValue().removeOldAndAppend(oldEntity, newEntity);
+			entry.getValue().removeOldAndAppend(id, oldEntity, newEntity);
 		}
 		metricUpdated.increment();
 		return newEntity;
 	}
 
-	private T insertEntity(T entity) {
+	private T insertEntity(K id, T entity) {
 		for (var entry : index.entrySet()) {
-			entry.getValue().append(entity);
+			entry.getValue().append(id, entity);
 		}
 		metricAdded.increment();
 		return entity;
 	}
 
-	public Optional<T> compute(K entityId, Function<T, T> updateTrigger) {
+	public Optional<T> compute(K id, Function<T, T> updateTrigger) {
 		metricObjectsSize.set(cache.size());
-		return Optional.ofNullable(cache.compute(entityId, (key, oldEntity) -> {
+		return Optional.ofNullable(cache.compute(id, (key, oldEntity) -> {
 			var newEntity = updateTrigger.apply(oldEntity);
 			if (newEntity == null) {
 				if (oldEntity != null) {
-					return removeEntity(oldEntity);
+					return removeEntity(id, oldEntity);
 				}
 			} else if (newEntity != oldEntity) {
 				if (oldEntity != null) {
-					return updateEntity(oldEntity, newEntity);
+					return updateEntity(id, oldEntity, newEntity);
 				}
-				return insertEntity(newEntity);
+				return insertEntity(id, newEntity);
 			}
 			return oldEntity;
 		}));

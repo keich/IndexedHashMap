@@ -25,7 +25,7 @@ import java.util.function.Predicate;
  * limitations under the License.
  */
 
-public class IndexLongUniq<K, T extends BaseEntity<K>> implements Index<K, T> {
+public class IndexLongUniq<K, T> implements Index<K, T> {
 	private final Function<T, Long> mapper;
 	private final SortedMap<Object, K> objects = new TreeMap<>();
 	private final AtomicInteger metricObjectsSize = new AtomicInteger(0);
@@ -57,14 +57,14 @@ public class IndexLongUniq<K, T extends BaseEntity<K>> implements Index<K, T> {
 	}
 
 	@Override
-	public synchronized void append(T entity) {
-		put(mapper.apply(entity), entity.getId());
+	public synchronized void append(K id, T entity) {
+		put(mapper.apply(entity), id);
 		metricObjectsSize.set(objects.size());
 	}
 
 	@Override
-	public synchronized void remove(final T entity) {
-		del(mapper.apply(entity), entity.getId());
+	public synchronized void remove(K id, T entity) {
+		del(mapper.apply(entity), id);
 		metricObjectsSize.set(objects.size());
 	}
 
@@ -115,10 +115,9 @@ public class IndexLongUniq<K, T extends BaseEntity<K>> implements Index<K, T> {
 	}
 
 	@Override
-	public synchronized void removeOldAndAppend(T oldEntity, T newEntity) {
-		final K id = newEntity.getId();
-		var oldVal = mapper.apply(oldEntity);
-		var newVal = mapper.apply(newEntity);
+	public synchronized void removeOldAndAppend(K id, T oldObj, T newObj) {
+		var oldVal = mapper.apply(oldObj);
+		var newVal = mapper.apply(newObj);
 
 		if (!oldVal.equals(newVal)) {
 			del(oldVal, id);

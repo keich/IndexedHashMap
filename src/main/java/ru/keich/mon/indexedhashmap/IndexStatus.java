@@ -25,7 +25,7 @@ import java.util.function.Predicate;
  * limitations under the License.
  */
 
-public class IndexStatus<K, T extends BaseEntity<K>> implements Index<K, T> {
+public class IndexStatus<K, T> implements Index<K, T> {
 	private static final Object PRESENT = new Object();
 	private final Function<T, BaseStatus> mapper;
 	private final AtomicInteger metricObjectsSize = new AtomicInteger(0);
@@ -61,13 +61,13 @@ public class IndexStatus<K, T extends BaseEntity<K>> implements Index<K, T> {
 	}
 
 	@Override
-	public synchronized void append(T entity) {
-		put(mapper.apply(entity), entity.getId());
+	public synchronized void append(K id, T obj) {
+		put(mapper.apply(obj), id);
 	}
 
 	@Override
-	public synchronized void remove(final T entity) {
-		del(mapper.apply(entity), entity.getId());
+	public synchronized void remove(K id, T obj) {
+		del(mapper.apply(obj), id);
 	}
 
 	@Override
@@ -121,10 +121,9 @@ public class IndexStatus<K, T extends BaseEntity<K>> implements Index<K, T> {
 	}
 	
 	@Override
-	public synchronized void removeOldAndAppend(T oldEntity, T newEntity) {
-		final K id = newEntity.getId();
-		var oldStatus = mapper.apply(oldEntity);
-		var newStatus = mapper.apply(newEntity);
+	public synchronized void removeOldAndAppend(K id, T oldObj, T newObj) {
+		var oldStatus = mapper.apply(oldObj);
+		var newStatus = mapper.apply(newObj);
 		
 		if(!oldStatus.equals(newStatus)) {
 			del(oldStatus, id);

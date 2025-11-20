@@ -21,9 +21,9 @@ import java.util.function.Predicate;
  */
 
 public interface Index<K, T> {
-	public void append(T entity);
+	public void append(K id, T entity);
 
-	public void remove(T entity);
+	public void remove(K id, T entity);
 
 	public Set<K> get(Object key);
 
@@ -39,5 +39,5 @@ public interface Index<K, T> {
 
 	public AtomicInteger getMetricObjectsSize();
 
-	public void removeOldAndAppend(T oldEntity, T newEntity);
+	public void removeOldAndAppend(K id, T oldEntity, T newEntity);
 }
