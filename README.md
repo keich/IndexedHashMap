@@ -31,57 +31,56 @@ Used as an in-memory key-value database for Objects.
 1. Create class extended BaseEntity
 
 ```java
-public class TestEntity extends BaseEntity<String> {
+	public static class TestEntity {
+	    private final String name;
+	    private final Long version;
 
-	private final String name;
-	private final Long version;
-	private final Set<String> someSet;
-	private final Map<String, String> someMap;
-
-	public TestEntity(String id, String name, Long version, Set<String> someSet
-			, Map<String, String> someMap) {
-		super(id);
-		this.name = name;
-		this.version = version;
-		this.someSet = someSet;
-		this.someMap = someMap;
+	    public TestEntity(String name, Long version) {
+	        this.name = name;
+	        this.version = version;
+	    }
+	    
+	    public static final String FIELD_NAME = "name";
+	    
+	    public String getName() {
+	    	return name;
+	    }
+	      
+	    public static Set<Object> getNameForIndex(TestEntity e) {
+	        return Collections.singleton(e.getName());
+	    } 
 	}
-}
 ```
 
 2. Create instance of IndexedHashMap
 
 ```java
-IndexedHashMap<String, TestEntity> store = new IndexedHashMap<>(null,
-		this.getClass().getSimpleName());
+IndexedHashMap<String, TestEntity> store = new IndexedHashMap<>(null,"DBName");
 ```
 
 3. Put and get data
 
 ```java
-TestEntity entity = new TestEntity("key1", "Hello word", 1L, Collections.emptySet()
-		, Collections.emptyMap());
-store.put(entity);
-Optional<TestEntity> result = store.get("key1");
+		TestEntity entity = new TestEntity("Hello word", 1L);
+		store.put("key1", entity);
+		TestEntity result = store.get("key1");
 ```
 
 4. Lock object for insert or update
 
 ```java
-store.compute("key1", obj -> {
-	// Object with key1 missing
-	if(obj == null) {
-		//Insert
-		return new TestEntity("key1", "Hello word", 1L, Collections.emptySet()
-				, Collections.emptyMap());
-	}
-	// Object exists
-	// Replace
-	return new TestEntity("key1", "Hello word", 1L, Collections.emptySet()
-			, Collections.emptyMap());
-	// Or remove
-	//return null;
-});
+		store.compute("key1", (k, obj) -> {
+		    // Object with key1 missing
+		    if(obj == null) {
+		        //Insert
+		        return new TestEntity("Hello word", 1L);
+		    }
+		    // Object exists
+		    // Replace
+		    return new TestEntity("Hello word 2", 1L);
+		    // Or remove
+		    //return null;
+		});
 ```
 
 ## Work with indexes
