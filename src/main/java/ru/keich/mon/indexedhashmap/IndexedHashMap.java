@@ -1,14 +1,15 @@
 package ru.keich.mon.indexedhashmap;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -34,7 +35,7 @@ import ru.keich.mon.indexedhashmap.query.predicates.QueryPredicate;
  * limitations under the License.
  */
 
-public class IndexedHashMap<K, T> {
+public class IndexedHashMap<K, T> implements Map<K, T> {
 
 	static final public String METRIC_NAME_MAP = "indexedhashmap_";
 	static final public String METRIC_NAME_OPERATION = "operation";
@@ -141,24 +142,40 @@ public class IndexedHashMap<K, T> {
 		query.put(name, new QueryObject<T>(mapper));
 	}
 
-	public Optional<T> put(K id, T obj) {
-		return compute(id, (oldObj) -> {
-			if (oldObj == null) {
-				return obj;
-			}
-			return oldObj;
+	@Override
+	public T put(K key, T value) {
+		return compute(key, (k, oldValue) -> {
+			return value;
 		});
 	}
-
-	private T remove(K id, T obj) {
+	
+	@Override
+	public T putIfAbsent(K key, T value) {
+		return compute(key, (k, old) -> {
+			if (old == null) {
+				return value;
+			}
+			return old;
+		});
+	}
+	
+	private T _remove(K id, T obj) {
 		for (var entry : index.entrySet()) {
 			entry.getValue().remove(id, obj);
 		}
 		metricRemoved.increment();
 		return null;
 	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public T remove(Object key) {
+		return compute((K)key, (k, v) -> {
+			return null;
+		});
+	}
 
-	private T update(K id, T oldObj, T newObj) {
+	private T _update(K id, T oldObj, T newObj) {
 		for (var entry : index.entrySet()) {
 			entry.getValue().removeOldAndAppend(id, oldObj, newObj);
 		}
@@ -166,7 +183,7 @@ public class IndexedHashMap<K, T> {
 		return newObj;
 	}
 
-	private T insert(K id, T obj) {
+	private T _insert(K id, T obj) {
 		for (var entry : index.entrySet()) {
 			entry.getValue().append(id, obj);
 		}
@@ -174,26 +191,48 @@ public class IndexedHashMap<K, T> {
 		return obj;
 	}
 
-	public Optional<T> compute(K id, Function<T, T> updateTrigger) {
+	@Override
+	public T compute(K key, BiFunction<? super K, ? super T, ? extends T> remappingFunction) {
 		metricObjectsSize.set(cache.size());
-		return Optional.ofNullable(cache.compute(id, (key, oldObj) -> {
-			var newObj = updateTrigger.apply(oldObj);
+		return cache.compute(key, (k, oldObj) -> {
+			var newObj = remappingFunction.apply(k, oldObj);
 			if (newObj == null) {
 				if (oldObj != null) {
-					return remove(id, oldObj);
+					return _remove(k, oldObj);
 				}
 			} else if (newObj != oldObj) {
 				if (oldObj != null) {
-					return update(id, oldObj, newObj);
+					return _update(k, oldObj, newObj);
 				}
-				return insert(id, newObj);
+				return _insert(k, newObj);
 			}
 			return oldObj;
-		}));
+		});
+	}
+	
+	@Override
+	public T computeIfAbsent(K key, Function<? super K, ? extends T> mappingFunction) {
+		return compute(key, (k, v) -> {
+			if(v == null) {
+				return mappingFunction.apply(k);
+			}
+			return null;
+		});
 	}
 
-	public Optional<T> get(K id) {
-		return Optional.ofNullable(cache.get(id));
+	@Override
+	public T computeIfPresent(K key, BiFunction<? super K, ? super T, ? extends T> remappingFunction) {
+		return compute(key, (k, v) -> {
+			if(v != null) {
+				return remappingFunction.apply(key,  v);
+			}
+			return null;
+		});
+	}
+
+	@Override
+	public T get(Object key) {
+		return cache.get(key);
 	}
 
 	public List<T> get(Set<K> ids) {
@@ -262,5 +301,50 @@ public class IndexedHashMap<K, T> {
 	public Set<K> keySetIndexEq(String fieldName, Object value) {
 		return index.get(fieldName).get(value);
 	}
+	
+	@Override
+	public int size() {
+		return cache.size();
+	}
 
+	@Override
+	public boolean isEmpty() {
+		return cache.isEmpty();
+	}
+
+	@Override
+	public boolean containsKey(Object key) {
+		return cache.containsKey(key);
+	}
+
+	@Override
+	public boolean containsValue(Object value) {
+		return cache.containsValue(value);
+	}
+
+	@Override
+	public void putAll(Map<? extends K, ? extends T> m) {
+		throw new UnsupportedOperationException("Method putAll is unsupported");
+	}
+
+	@Override
+	public void clear() {
+		throw new UnsupportedOperationException("Method clear is unsupported");
+	}
+
+	@Override
+	public Set<K> keySet() {
+		return cache.keySet();
+	}
+
+	@Override
+	public Collection<T> values() {
+		return cache.values();
+	}
+
+	@Override
+	public Set<Entry<K, T>> entrySet() {
+		return cache.entrySet();
+	}
+	
 }
