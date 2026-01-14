@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -28,12 +27,11 @@ import java.util.function.Predicate;
 public class IndexStatus<K, T> implements Index<K, T> {
 	private static final Object PRESENT = new Object();
 	private final Function<T, BaseStatus> mapper;
-	private final AtomicInteger metricObjectsSize = new AtomicInteger(0);
+	@SuppressWarnings("unchecked")
 	private final Map<K, Object> objects[] = new Map[BaseStatus.length];
 	
 	public IndexStatus(Function<T, BaseStatus> mapper) {
 		this.mapper = mapper;
-		metricObjectsSize.set(BaseStatus.length);
 		for (int i = 0; i < BaseStatus.length; i++) {
 			objects[i] = new HashMap<K, Object>();
 		}
@@ -126,8 +124,8 @@ public class IndexStatus<K, T> implements Index<K, T> {
 	}
 
 	@Override
-	public AtomicInteger getMetricObjectsSize() {
-		return metricObjectsSize;
+	public synchronized int getSize() {
+		return BaseStatus.length;
 	}
 	
 	@Override

@@ -1,7 +1,6 @@
 package ru.keich.mon.indexedhashmap;
 
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 
 /*
@@ -39,7 +38,7 @@ public interface Index<K, T> {
 
 	public Set<K> valueSet();
 
-	public AtomicInteger getMetricObjectsSize();
+	public int getSize();
 
 	public void removeOldAndAppend(K id, T oldEntity, T newEntity);
 }

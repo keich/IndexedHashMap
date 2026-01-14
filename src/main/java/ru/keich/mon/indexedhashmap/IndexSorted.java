@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -31,7 +30,6 @@ public class IndexSorted<K, T> implements Index<K, T> {
 	private static final Object PRESENT = new Object();
 	private final Function<T, Set<Object>> mapper;
 	private final SortedMap<Object, Map<K, Object>> objects = new TreeMap<>();
-	private final AtomicInteger metricObjectsSize = new AtomicInteger(0);
 
 	public IndexSorted(Function<T, Set<Object>> mapper) {
 		this.mapper = mapper;
@@ -74,13 +72,11 @@ public class IndexSorted<K, T> implements Index<K, T> {
 	@Override
 	public synchronized void append(K id, T obj) {
 		mapper.apply(obj).forEach(key -> put(key, id));
-		metricObjectsSize.set(objects.size());
 	}
 
 	@Override
 	public synchronized void remove(K id, T obj) {
 		mapper.apply(obj).forEach(key -> del(key, id));
-		metricObjectsSize.set(objects.size());
 	}
 
 	@Override
@@ -145,8 +141,8 @@ public class IndexSorted<K, T> implements Index<K, T> {
 	}
 
 	@Override
-	public AtomicInteger getMetricObjectsSize() {
-		return metricObjectsSize;
+	public synchronized int getSize() {
+		return objects.size();
 	}
 
 	@Override
@@ -164,7 +160,6 @@ public class IndexSorted<K, T> implements Index<K, T> {
 				put(key, id);
 			}
 		}
-		metricObjectsSize.set(objects.size());
 	}
 
 }

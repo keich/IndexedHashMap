@@ -113,7 +113,7 @@ public class IndexedHashMap<K, T> implements Map<K, T> {
 		if (registry != null) {
 			var tags = Tags.of(METRIC_NAME_SERVICENAME, serviceName, METRIC_NAME_INDEX, name.toLowerCase());
 			registry.gauge(METRIC_NAME_MAP + METRIC_NAME_INDEX + "_" + METRIC_NAME_SIZE, tags,
-					index.get(name).getMetricObjectsSize());
+					index.get(name).getSize());
 		}
 	}
 
@@ -136,7 +136,7 @@ public class IndexedHashMap<K, T> implements Map<K, T> {
 		if (registry != null) {
 			var tags = Tags.of(METRIC_NAME_SERVICENAME, serviceName, METRIC_NAME_INDEX, name.toLowerCase());
 			registry.gauge(METRIC_NAME_MAP + METRIC_NAME_INDEX + "_" + METRIC_NAME_SIZE, tags,
-					index.get(name).getMetricObjectsSize());
+					index.get(name).getSize());
 		}
 	}
 

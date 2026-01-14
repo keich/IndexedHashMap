@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -28,7 +27,6 @@ import java.util.function.Predicate;
 public class IndexLongUniq<K, T> implements Index<K, T> {
 	private final Function<T, Long> mapper;
 	private final SortedMap<Object, K> objects = new TreeMap<>();
-	private final AtomicInteger metricObjectsSize = new AtomicInteger(0);
 
 	public IndexLongUniq(Function<T, Long> mapper) {
 		this.mapper = mapper;
@@ -59,13 +57,11 @@ public class IndexLongUniq<K, T> implements Index<K, T> {
 	@Override
 	public synchronized void append(K id, T entity) {
 		put(mapper.apply(entity), id);
-		metricObjectsSize.set(objects.size());
 	}
 
 	@Override
 	public synchronized void remove(K id, T entity) {
 		del(mapper.apply(entity), id);
-		metricObjectsSize.set(objects.size());
 	}
 
 	@Override
@@ -126,8 +122,8 @@ public class IndexLongUniq<K, T> implements Index<K, T> {
 	}
 
 	@Override
-	public AtomicInteger getMetricObjectsSize() {
-		return metricObjectsSize;
+	public synchronized int getSize() {
+		return objects.size();
 	}
 
 	@Override
@@ -139,7 +135,6 @@ public class IndexLongUniq<K, T> implements Index<K, T> {
 			del(oldVal, id);
 			put(newVal, id);
 		}
-		metricObjectsSize.set(objects.size());
 	}
 
 }
