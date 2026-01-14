@@ -6,8 +6,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import ru.keich.mon.indexedhashmap.query.predicates.QueryPredicate;
-
 /*
  * Copyright 2025 the original author or authors.
  *
@@ -83,10 +81,6 @@ public class TestEntity {
 		return e.getSomeMap().entrySet().stream().collect(Collectors.toSet());
 	}
 
-	public static boolean testVersion(TestEntity e, QueryPredicate predicate) {
-		return predicate.test(e.getVersion());
-	}
-	
 	public String getId() {
 		return id;
 	}
