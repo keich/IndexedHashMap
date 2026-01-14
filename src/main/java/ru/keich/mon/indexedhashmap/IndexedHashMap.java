@@ -144,19 +144,12 @@ public class IndexedHashMap<K, T> implements Map<K, T> {
 
 	@Override
 	public T put(K key, T value) {
-		return compute(key, (k, oldValue) -> {
-			return value;
-		});
+		return compute(key, (k, oldValue) -> value);
 	}
 	
 	@Override
 	public T putIfAbsent(K key, T value) {
-		return compute(key, (k, old) -> {
-			if (old == null) {
-				return value;
-			}
-			return old;
-		});
+		return compute(key, (k, old) -> (old == null) ? value : old);
 	}
 	
 	private T _remove(K id, T obj) {
@@ -170,9 +163,7 @@ public class IndexedHashMap<K, T> implements Map<K, T> {
 	@SuppressWarnings("unchecked")
 	@Override
 	public T remove(Object key) {
-		return compute((K)key, (k, v) -> {
-			return null;
-		});
+		return compute((K) key, (k, v) -> null);
 	}
 
 	private T _update(K id, T oldObj, T newObj) {
@@ -197,37 +188,20 @@ public class IndexedHashMap<K, T> implements Map<K, T> {
 		return cache.compute(key, (k, oldObj) -> {
 			var newObj = remappingFunction.apply(k, oldObj);
 			if (newObj == null) {
-				if (oldObj != null) {
-					return _remove(k, oldObj);
-				}
-			} else if (newObj != oldObj) {
-				if (oldObj != null) {
-					return _update(k, oldObj, newObj);
-				}
-				return _insert(k, newObj);
-			}
-			return oldObj;
+				return (oldObj != null) ?_remove(k, oldObj) : null;
+			} 
+			return (oldObj != null) ? _update(k, oldObj, newObj) : _insert(k, newObj);
 		});
 	}
 	
 	@Override
 	public T computeIfAbsent(K key, Function<? super K, ? extends T> mappingFunction) {
-		return compute(key, (k, v) -> {
-			if(v == null) {
-				return mappingFunction.apply(k);
-			}
-			return null;
-		});
+		return compute(key, (k, v) -> (v == null) ? mappingFunction.apply(k) : null);
 	}
 
 	@Override
 	public T computeIfPresent(K key, BiFunction<? super K, ? super T, ? extends T> remappingFunction) {
-		return compute(key, (k, v) -> {
-			if(v != null) {
-				return remappingFunction.apply(key,  v);
-			}
-			return null;
-		});
+		return compute(key, (k, v) -> (v != null) ? remappingFunction.apply(key, v) : null);
 	}
 
 	@Override
