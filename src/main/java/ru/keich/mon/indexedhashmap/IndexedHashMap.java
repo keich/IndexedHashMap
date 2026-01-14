@@ -18,7 +18,7 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import ru.keich.mon.indexedhashmap.query.Operator;
-import ru.keich.mon.indexedhashmap.query.predicates.QueryPredicate;
+import ru.keich.mon.indexedhashmap.query.QueryPredicate;
 
 /*
  * Copyright 2025 the original author or authors.
@@ -222,17 +222,17 @@ public class IndexedHashMap<K, T> implements Map<K, T> {
 	}
 	
 
-	private Set<K> findByQuery(QueryPredicate predicate) {
-		var fieldName = predicate.getName();
+	private Set<K> findByQuery(QueryPredicate qp) {
+		var fieldName = qp.getName();
 		var mapper = query.get(fieldName);
 		final Predicate<Entry<K, T>> qPredicate;
-		if (predicate.getOperator() == Operator.NI) {
+		if (qp.getOperator() == Operator.NI) {
 			qPredicate = entry -> !mapper.apply(entry.getValue())
-					.contains(predicate.getValue());
+					.contains(qp.getValue());
 		} else {
 			qPredicate = entry -> mapper.apply(entry.getValue())
 					.stream()
-					.filter(predicate)
+					.filter(qp.getPredicate())
 					.findAny()
 					.isPresent();
 		}
@@ -242,26 +242,26 @@ public class IndexedHashMap<K, T> implements Map<K, T> {
 				.collect(Collectors.toSet());
 	}
 
-	private Set<K> findByIndex(QueryPredicate predicate) {
-		var fieldName = predicate.getName();
-		switch (predicate.getOperator()) {
+	private Set<K> findByIndex(QueryPredicate qp) {
+		var fieldName = qp.getName();
+		switch (qp.getOperator()) {
 		case EQ:
-			return index.get(fieldName).get(predicate.getValue());
+			return index.get(fieldName).get(qp.getValue());
 		case NE:
 		case CO:
 		case NC:
-			return index.get(fieldName).findByKey(predicate);
+			return index.get(fieldName).findByKey(qp.getPredicate());
 		case NI:
-			var t = index.get(fieldName).get(predicate.getValue());
+			var t = index.get(fieldName).get(qp.getValue());
 			var r = index.get(fieldName).valueSet();
 			r.removeAll(t);
 			return r;
 		case LT:
-			return index.get(fieldName).getBefore(predicate.getValue());
+			return index.get(fieldName).getBefore(qp.getValue());
 		case GT:
-			return index.get(fieldName).getAfter(predicate.getValue());
+			return index.get(fieldName).getAfter(qp.getValue());
 		case GE:
-			return index.get(fieldName).getAfterEqual(predicate.getValue());
+			return index.get(fieldName).getAfterEqual(qp.getValue());
 		default:
 			return Collections.emptySet();
 		}
