@@ -248,10 +248,7 @@ public class IndexedHashMap<K, T> implements Map<K, T> {
 		case LT:
 			return index.get(fieldName).getBefore(predicate.getValue());
 		case GT:
-			var r1 = index.get(fieldName).getAfterEqual(predicate.getValue());
-			var eq = index.get(fieldName).get(predicate.getValue());
-			r1.removeAll(eq);
-			return r1;
+			return index.get(fieldName).getAfter(predicate.getValue());
 		case GE:
 			return index.get(fieldName).getAfterEqual(predicate.getValue());
 		default:

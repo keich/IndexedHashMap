@@ -87,6 +87,16 @@ public class IndexStatus<K, T> implements Index<K, T> {
 	}
 	
 	@Override
+	public synchronized Set<K> getAfter(Object key) {
+		BaseStatus status = (BaseStatus)key;
+		var out = new HashSet<K>();
+		for(int i = status.getInt() + 1; i < BaseStatus.length; i++) {
+			out.addAll(objects[i].keySet());
+		}
+		return out;
+	}
+	
+	@Override
 	public synchronized Set<K> getAfterEqual(Object key) {
 		BaseStatus status = (BaseStatus)key;
 		var out = new HashSet<K>();
