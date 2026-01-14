@@ -110,6 +110,11 @@ public class IndexedHashMap<K, T> implements Map<K, T> {
 
 	public void addIndexLongUniq(String name, Function<T, Long> mapper) {
 		index.put(name, new IndexLongUniq<K, T>(mapper));
+		if (registry != null) {
+			var tags = Tags.of(METRIC_NAME_SERVICENAME, serviceName, METRIC_NAME_INDEX, name.toLowerCase());
+			registry.gauge(METRIC_NAME_MAP + METRIC_NAME_INDEX + "_" + METRIC_NAME_SIZE, tags,
+					index.get(name).getMetricObjectsSize());
+		}
 	}
 
 	public void addIndexStatus(String name, Function<T, BaseStatus> mapper) {
