@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import io.micrometer.core.instrument.Counter;
@@ -219,16 +220,26 @@ public class IndexedHashMap<K, T> implements Map<K, T> {
 		}
 		return out;
 	}
+	
 
 	private Set<K> findByQuery(QueryPredicate predicate) {
 		var fieldName = predicate.getName();
 		var mapper = query.get(fieldName);
-		return cache.entrySet().stream().filter(entry -> {
-			if (predicate.getOperator() == Operator.NI) {
-				return !mapper.apply(entry.getValue()).contains(predicate.getValue());
-			}
-			return mapper.apply(entry.getValue()).stream().filter(predicate).findAny().isPresent();
-		}).map(e -> e.getKey()).collect(Collectors.toSet());
+		final Predicate<Entry<K, T>> qPredicate;
+		if (predicate.getOperator() == Operator.NI) {
+			qPredicate = entry -> !mapper.apply(entry.getValue())
+					.contains(predicate.getValue());
+		} else {
+			qPredicate = entry -> mapper.apply(entry.getValue())
+					.stream()
+					.filter(predicate)
+					.findAny()
+					.isPresent();
+		}
+		return cache.entrySet().stream()
+				.filter(qPredicate)
+				.map(e -> e.getKey())
+				.collect(Collectors.toSet());
 	}
 
 	private Set<K> findByIndex(QueryPredicate predicate) {
@@ -239,7 +250,7 @@ public class IndexedHashMap<K, T> implements Map<K, T> {
 		case NE:
 		case CO:
 		case NC:
-			return index.get(fieldName).findByKey((p) -> predicate.test(p));
+			return index.get(fieldName).findByKey(predicate);
 		case NI:
 			var t = index.get(fieldName).get(predicate.getValue());
 			var r = index.get(fieldName).valueSet();
