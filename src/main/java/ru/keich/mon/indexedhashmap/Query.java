@@ -18,6 +18,7 @@ import java.util.Set;
  * limitations under the License.
  */
 
+@FunctionalInterface
 public interface Query<T> {
 	public Set<Object> apply(T o);
 }
