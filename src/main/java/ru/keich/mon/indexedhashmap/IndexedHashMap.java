@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
-import ru.keich.mon.indexedhashmap.query.Operator;
 import ru.keich.mon.indexedhashmap.query.QueryPredicate;
 
 /*
@@ -227,7 +226,7 @@ public class IndexedHashMap<K, T> implements Map<K, T> {
 		var fieldName = qp.getName();
 		var mapper = query.get(fieldName);
 		final Predicate<Entry<K, T>> qPredicate;
-		if (qp.getOperator() == Operator.NI) {
+		if (qp.getOperator() == QueryPredicate.Operator.NI) {
 			qPredicate = entry -> !mapper.apply(entry.getValue())
 					.contains(qp.getValue());
 		} else {

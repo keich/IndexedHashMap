@@ -1,7 +1,6 @@
 package ru.keich.mon.indexedhashmap.query;
 
 import java.util.Map.Entry;
-import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
 /*
@@ -22,6 +21,10 @@ import java.util.function.Predicate;
 
 public class QueryPredicate {
 
+	public static enum Operator {
+		NE, EQ, LT, GT, GE, CO, NC, NI;
+	}
+	
 	final String name;
 	final Operator operator;
 	final Object value;
@@ -53,40 +56,6 @@ public class QueryPredicate {
 	
 	public Predicate<Object> getPredicate() {
 		return predicate;
-	}
-	
-	public static <C> QueryPredicate fromParam(String name, String value,
-			BiFunction<String, String, Object> valueConverter) {
-		var arr = value.split(":", 2);
-		if (arr.length == 2) {
-			var operator = Operator.fromString(arr[0]);
-			switch (operator) {
-			case EQ:
-				return equal(name, valueConverter.apply(name, arr[1]));
-			case NE:
-				return notEqual(name, valueConverter.apply(name, arr[1]));
-			case LT:
-				return lessThan(name, valueConverter.apply(name, arr[1]));
-			case GT:
-				return greaterThan(name, valueConverter.apply(name, arr[1]));
-			case GE:
-				return greaterEqual(name, valueConverter.apply(name, arr[1]));
-			case CO:
-				return contain(name, valueConverter.apply(name, arr[1]));
-			case NC:
-				return notContain(name, valueConverter.apply(name, arr[1]));
-			case NI:
-				return notInclude(name, valueConverter.apply(name, arr[1]));
-			default:
-				return error(name, value);
-			}
-		} else {
-			return equal(name, valueConverter.apply(name, value));
-		}
-	}
-
-	public static QueryPredicate error(String name, Object value) {
-		return new QueryPredicate(name, Operator.ERROR, value, v -> false);
 	}
 
 	public static QueryPredicate equal(String name, Object value) {
