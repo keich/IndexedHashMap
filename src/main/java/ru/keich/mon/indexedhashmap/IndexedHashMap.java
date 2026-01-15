@@ -79,10 +79,6 @@ public class IndexedHashMap<K, T> implements Map<K, T> {
 
 	}
 
-	public enum IndexType {
-		EQUAL, SORTED, UNIQ_SORTED
-	}
-
 	private Map<K, T> cache = new ConcurrentHashMap<>();
 	private Map<String, Index<K, T>> index = new HashMap<>();
 	private Map<String, Query<T>> query = new HashMap<>();
@@ -107,37 +103,37 @@ public class IndexedHashMap<K, T> implements Map<K, T> {
 					Tags.of(METRIC_NAME_SERVICENAME, serviceName), metricObjectsSize);
 		}
 	}
-
-	public void addIndexLongUniq(String name, Function<T, Long> mapper) {
-		index.put(name, new IndexLongUniq<K, T>(mapper));
+	
+	private void registerIndexMetric(String name) {
 		if (registry != null) {
 			var tags = Tags.of(METRIC_NAME_SERVICENAME, serviceName, METRIC_NAME_INDEX, name.toLowerCase());
 			registry.gauge(METRIC_NAME_MAP + METRIC_NAME_INDEX + "_" + METRIC_NAME_SIZE, tags,
 					index.get(name).getSize());
 		}
+	}
+
+	public void addIndexLongUniq(String name, Function<T, Long> mapper) {
+		index.put(name, new IndexLongUniq<K, T>(mapper));
+		registerIndexMetric(name);
 	}
 
 	public void addIndexSmallInt(String name, int size, Function<T, Integer> mapper) {
 		index.put(name, new IndexSmallInt<K, T>(mapper, size));
 	}
 
-	public void addIndex(String name, IndexType type, Function<T, Set<Object>> mapper) {
-		switch (type) {
-		case EQUAL:
-			index.put(name, new IndexEqual<K, T>(mapper));
-			break;
-		case SORTED:
-			index.put(name, new IndexSorted<K, T>(mapper));
-			break;
-		case UNIQ_SORTED:
-			index.put(name, new IndexSortedUniq<K, T>(mapper));
-			break;
-		}
-		if (registry != null) {
-			var tags = Tags.of(METRIC_NAME_SERVICENAME, serviceName, METRIC_NAME_INDEX, name.toLowerCase());
-			registry.gauge(METRIC_NAME_MAP + METRIC_NAME_INDEX + "_" + METRIC_NAME_SIZE, tags,
-					index.get(name).getSize());
-		}
+	public void addIndexEqual(String name, Function<T, Set<Object>> mapper) {
+		index.put(name, new IndexEqual<K, T>(mapper));
+		registerIndexMetric(name);
+	}
+	
+	public void addIndexSorted(String name, Function<T, Set<Object>> mapper) {
+		index.put(name, new IndexSorted<K, T>(mapper));
+		registerIndexMetric(name);
+	}
+	
+	public void addIndexUniqSorted(String name, Function<T, Set<Object>> mapper) {
+		index.put(name, new IndexSortedUniq<K, T>(mapper));
+		registerIndexMetric(name);
 	}
 
 	public void addQueryFieldLong(String name, Function<T, Long> mapper) {

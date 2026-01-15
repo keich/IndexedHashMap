@@ -9,7 +9,6 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
-import ru.keich.mon.indexedhashmap.IndexedHashMap.IndexType;
 import ru.keich.mon.indexedhashmap.query.QueryPredicate;
 
 /*
@@ -93,7 +92,7 @@ public class StoreTest {
 	@Test
 	public void queryEqualByIndex() {
 		var store = new IndexedHashMap<String, TestEntity>(null, this.getClass().getSimpleName());
-		store.addIndex(TestEntity.FIELD_NAME, IndexType.EQUAL, TestEntity::getNameForIndex);
+		store.addIndexEqual(TestEntity.FIELD_NAME, TestEntity::getNameForIndex);
 		queryEqual(store);
 	}
 
@@ -117,7 +116,7 @@ public class StoreTest {
 	@Test
 	public void queryNotEqualByIndex() {
 		var store = new IndexedHashMap<String, TestEntity>(null, this.getClass().getSimpleName());
-		store.addIndex(TestEntity.FIELD_NAME, IndexType.EQUAL, TestEntity::getNameForIndex);
+		store.addIndexEqual(TestEntity.FIELD_NAME, TestEntity::getNameForIndex);
 		queryNotEqual(store);
 	}
 
@@ -211,7 +210,7 @@ public class StoreTest {
 	@Test
 	public void queryContainStringByIndex() {
 		var store = new IndexedHashMap<String, TestEntity>(null, this.getClass().getSimpleName());
-		store.addIndex(TestEntity.FIELD_NAME, IndexType.EQUAL, TestEntity::getNameUpperCaseForIndex);
+		store.addIndexEqual(TestEntity.FIELD_NAME, TestEntity::getNameUpperCaseForIndex);
 		queryContainString(store);
 	}
 
@@ -235,7 +234,7 @@ public class StoreTest {
 	@Test
 	public void queryNotContainStringByIndex() {
 		var store = new IndexedHashMap<String, TestEntity>(null, this.getClass().getSimpleName());
-		store.addIndex(TestEntity.FIELD_NAME, IndexType.EQUAL, TestEntity::getNameUpperCaseForIndex);
+		store.addIndexEqual(TestEntity.FIELD_NAME, TestEntity::getNameUpperCaseForIndex);
 		queryNotContainString(store);
 	}
 
@@ -260,7 +259,7 @@ public class StoreTest {
 	@Test
 	public void queryContainMapByIndex() {
 		var store = new IndexedHashMap<String, TestEntity>(null, this.getClass().getSimpleName());
-		store.addIndex(TestEntity.FIELD_SOMEMAP, IndexType.EQUAL, TestEntity::getSomeMapForIndex);
+		store.addIndexEqual(TestEntity.FIELD_SOMEMAP, TestEntity::getSomeMapForIndex);
 		queryContainMap(store);
 	}
 	
@@ -285,7 +284,7 @@ public class StoreTest {
 	@Test
 	public void queryNotContainMapByIndex() {
 		var store = new IndexedHashMap<String, TestEntity>(null, this.getClass().getSimpleName());
-		store.addIndex(TestEntity.FIELD_SOMEMAP, IndexType.EQUAL, TestEntity::getSomeMapForIndex);
+		store.addIndexEqual(TestEntity.FIELD_SOMEMAP, TestEntity::getSomeMapForIndex);
 		queryNotContainMap(store);
 	}
 
@@ -309,8 +308,11 @@ public class StoreTest {
 	@Test
 	public void queryNotIncludeSetByIndex() {
 		var store = new IndexedHashMap<String, TestEntity>(null, this.getClass().getSimpleName());
-		store.addIndex(TestEntity.FIELD_SOMESET, IndexType.EQUAL, TestEntity::getSomeSetForIndex);
+		store.addIndexEqual(TestEntity.FIELD_SOMESET, TestEntity::getSomeSetForIndex);
 		queryNotIncludeSet(store);
 	}
 
 }
+
+
+// TODO add test other indexes
