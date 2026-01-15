@@ -1,6 +1,5 @@
 package ru.keich.mon.indexedhashmap;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -77,11 +76,12 @@ public class IndexEqual<K, T> implements Index<K, T> {
 
 	@Override
 	public synchronized Set<K> get(Object key) {
-		var set = objects.get(key);
-		if (set == null) {
-			return Collections.emptySet();
+		var out = new HashSet<K>();
+		var val = objects.get(key);
+		if (val != null) {
+			out.addAll(val);
 		}
-		return new HashSet<K>(set);
+		return out;
 	}
 
 	@Override

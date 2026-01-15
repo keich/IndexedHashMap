@@ -1,9 +1,6 @@
 package ru.keich.mon.indexedhashmap;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -80,11 +77,12 @@ public class IndexSorted<K, T> implements Index<K, T> {
 
 	@Override
 	public synchronized Set<K> get(Object key) {
-		var set = objects.get(key);
-		if (set == null) {
-			return Collections.emptySet();
+		var out = new HashSet<K>();
+		var val = objects.get(key);
+		if (val != null) {
+			out.addAll(val);
 		}
-		return new HashSet<K>(set);
+		return out;
 	}
 
 	@Override
@@ -123,11 +121,20 @@ public class IndexSorted<K, T> implements Index<K, T> {
 
 	@Override
 	public synchronized Set<K> getAfterFirst(Object key) {
-		var view = objects.tailMap(key);
-		if (view.isEmpty()) {
-			return Collections.emptySet();
+		var out = new HashSet<K>();
+		var iter = objects.tailMap(key).entrySet().iterator();
+		if(iter.hasNext()) {
+			var e = iter.next();
+			if(!e.getKey().equals(key)) {
+				out.addAll(e.getValue());
+				return out;
+			}
 		}
-		return objects.get(view.firstKey());
+		if(iter.hasNext()) {
+			out.addAll(iter.next().getValue());
+			return out;
+		}
+		return out;
 	}
 
 	@Override

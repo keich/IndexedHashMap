@@ -1,6 +1,5 @@
 package ru.keich.mon.indexedhashmap;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Function;
@@ -105,11 +104,12 @@ public class IndexSmallInt<K, T> implements Index<K, T> {
 
 	@Override
 	public synchronized Set<K> getAfterFirst(Object key) {
+		var out = new HashSet<K>();
 		Integer val = ((Integer) key) + 1;
 		if (val < size) {
-			return new HashSet<K>(objects[val]);
+			out.addAll(objects[val]);
 		}
-		return Collections.emptySet();
+		return out;
 	}
 
 	@Override

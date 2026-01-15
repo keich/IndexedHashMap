@@ -1,6 +1,5 @@
 package ru.keich.mon.indexedhashmap;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.SortedMap;
@@ -66,11 +65,12 @@ public class IndexSortedUniq<K, T> implements Index<K, T> {
 
 	@Override
 	public synchronized Set<K> get(Object key) {
+		var out = new HashSet<K>();
 		var val = objects.get(key);
-		if (val == null) {
-			return Collections.emptySet();
+		if (val != null) {
+			out.add(val);
 		}
-		return Collections.singleton(val);
+		return out;
 	}
 
 	@Override
@@ -106,14 +106,22 @@ public class IndexSortedUniq<K, T> implements Index<K, T> {
 		}
 		return out;
 	}
-
+	
 	@Override
 	public synchronized Set<K> getAfterFirst(Object key) {
-		var view = objects.tailMap(key);
-		if (view.isEmpty()) {
-			return Collections.emptySet();
+		var out = new HashSet<K>();
+		var iter = objects.tailMap(key).entrySet().iterator();
+		if(iter.hasNext()) {
+			var e = iter.next();
+			if(!e.getKey().equals(key)) {
+				out.add(e.getValue());
+				return out;
+			}
 		}
-		return Collections.singleton(objects.get(view.firstKey()));
+		if(iter.hasNext()) {
+			out.add(iter.next().getValue());
+		}
+		return out;
 	}
 
 	@Override

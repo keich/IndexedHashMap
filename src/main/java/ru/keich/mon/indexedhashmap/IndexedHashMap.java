@@ -2,8 +2,8 @@ package ru.keich.mon.indexedhashmap;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -263,7 +263,7 @@ public class IndexedHashMap<K, T> implements Map<K, T> {
 		case GE:
 			return index.get(fieldName).getAfterEqual(qp.getValue());
 		default:
-			return Collections.emptySet();
+			return new HashSet<>();
 		}
 	}
 
