@@ -121,8 +121,8 @@ public class QueryPredicate {
 	}
 
 	public static QueryPredicate notInclude(String name, Object value) {
-		 String str = value.toString();
-		 return new QueryPredicate(name, Operator.NI, value, v -> !v.toString().contains(str));
+		final Predicate<Object> predicate =  v -> !v.toString().contains(value.toString());
+		return new QueryPredicate(name, Operator.NI, value, predicate);
 	}
 
 }
