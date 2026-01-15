@@ -132,8 +132,8 @@ Any object with hash and equal or any object implements Comparable.(depends on p
 | --------------- | ----------------------- |
 | IndexEqual      | Index from HashMap      |
 | IndexLongUniq   | Index from TreeMap for uniq Long values |
-| IndexSorted     | Index from TreeMap for Objects implemented Comparable |
-| IndexSortedUniq | Index from TreeMap for uniq Objects implemented Comparable |
+| IndexSorted     | Index from TreeMap for a objects implements Comparable |
+| IndexSortedUniq | Index from TreeMap for uniq a objects implements Comparable |
 | IndexSmallInt   | Index for Integer with small range(Uses array) |
 
 ## Work without indexes
