@@ -25,33 +25,32 @@ import java.util.function.Predicate;
  */
 
 public class IndexEqual<K, T> implements Index<K, T> {
-	private static final Object PRESENT = new Object();
 	private final Function<T, Set<Object>> mapper;
-	private final Map<Object, Map<K, Object>> objects = new HashMap<>();
+	private final Map<Object, Set<K>> objects = new HashMap<>();
 
 	public IndexEqual(Function<T, Set<Object>> mapper) {
 		this.mapper = mapper;
 	}
 
 	private void put(Object key, K id) {
-		objects.compute(key, (k, map) -> {
-			if (map == null) {
-				map = new HashMap<>();
+		objects.compute(key, (k, set) -> {
+			if (set == null) {
+				set = new HashSet<>();
 			}
-			map.put(id, PRESENT);
-			return map;
+			set.add(id);
+			return set;
 		});
 	}
 
 	private void del(Object key, K id) {
-		objects.compute(key, (k, map) -> {
-			if (map != null) {
-				map.remove(id);
-				if (map.isEmpty()) {
+		objects.compute(key, (k, set) -> {
+			if (set != null) {
+				set.remove(id);
+				if (set.isEmpty()) {
 					return null;
 				}
 			}
-			return map;
+			return set;
 		});
 	}
 
@@ -60,7 +59,7 @@ public class IndexEqual<K, T> implements Index<K, T> {
 		var out = new HashSet<K>();
 		for (var entry : objects.entrySet()) {
 			if (predicate.test(entry.getKey())) {
-				out.addAll(entry.getValue().keySet());
+				out.addAll(entry.getValue());
 			}
 		}
 		return out;
@@ -78,11 +77,11 @@ public class IndexEqual<K, T> implements Index<K, T> {
 
 	@Override
 	public synchronized Set<K> get(Object key) {
-		var map = objects.get(key);
-		if (map == null) {
+		var set = objects.get(key);
+		if (set == null) {
 			return Collections.emptySet();
 		}
-		return new HashSet<K>(map.keySet());
+		return new HashSet<K>(set);
 	}
 
 	@Override
@@ -110,7 +109,7 @@ public class IndexEqual<K, T> implements Index<K, T> {
 		var out = new HashSet<K>();
 		var entries = objects.entrySet();
 		for (var entry : entries) {
-			out.addAll(entry.getValue().keySet());
+			out.addAll(entry.getValue());
 		}
 		return out;
 	}

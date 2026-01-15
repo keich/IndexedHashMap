@@ -27,21 +27,20 @@ import java.util.function.Predicate;
  */
 
 public class IndexSorted<K, T> implements Index<K, T> {
-	private static final Object PRESENT = new Object();
 	private final Function<T, Set<Object>> mapper;
-	private final SortedMap<Object, Map<K, Object>> objects = new TreeMap<>();
+	private final SortedMap<Object, Set<K>> objects = new TreeMap<>();
 
 	public IndexSorted(Function<T, Set<Object>> mapper) {
 		this.mapper = mapper;
 	}
 
 	private void put(Object key, K id) {
-		objects.compute(key, (k, map) -> {
-			if (map == null) {
-				map = new HashMap<>();
+		objects.compute(key, (k, set) -> {
+			if (set == null) {
+				set = new HashSet<>();
 			}
-			map.put(id, PRESENT);
-			return map;
+			set.add(id);
+			return set;
 		});
 	}
 
@@ -63,7 +62,7 @@ public class IndexSorted<K, T> implements Index<K, T> {
 		var entries = objects.entrySet();
 		for (var entry : entries) {
 			if (predicate.test(entry.getKey())) {
-				out.addAll(entry.getValue().keySet());
+				out.addAll(entry.getValue());
 			}
 		}
 		return out;
@@ -81,18 +80,18 @@ public class IndexSorted<K, T> implements Index<K, T> {
 
 	@Override
 	public synchronized Set<K> get(Object key) {
-		var map = objects.get(key);
-		if (map == null) {
+		var set = objects.get(key);
+		if (set == null) {
 			return Collections.emptySet();
 		}
-		return new HashSet<K>(map.keySet());
+		return new HashSet<K>(set);
 	}
 
 	@Override
 	public synchronized Set<K> getBefore(Object key) {
 		var out = new HashSet<K>();
-		for (var val : objects.headMap(key).values()) {
-			out.addAll(val.keySet());
+		for (var set : objects.headMap(key).values()) {
+			out.addAll(set);
 		}
 		return out;
 	}
@@ -104,11 +103,11 @@ public class IndexSorted<K, T> implements Index<K, T> {
 		if(iter.hasNext()) {
 			var e = iter.next();
 			if(!e.getKey().equals(key)) {
-				out.addAll(e.getValue().keySet());
+				out.addAll(e.getValue());
 			}
 		}
 		while(iter.hasNext()) {
-			out.addAll(iter.next().getValue().keySet());
+			out.addAll(iter.next().getValue());
 		}
 		return out;
 	}
@@ -116,8 +115,8 @@ public class IndexSorted<K, T> implements Index<K, T> {
 	@Override
 	public synchronized Set<K> getAfterEqual(Object key) {
 		var out = new HashSet<K>();
-		for (var val : objects.tailMap(key).values()) {
-			out.addAll(val.keySet());
+		for (var set : objects.tailMap(key).values()) {
+			out.addAll(set);
 		}
 		return out;
 	}
@@ -128,14 +127,14 @@ public class IndexSorted<K, T> implements Index<K, T> {
 		if (view.isEmpty()) {
 			return Collections.emptySet();
 		}
-		return objects.get(view.firstKey()).keySet();
+		return objects.get(view.firstKey());
 	}
 
 	@Override
 	public synchronized Set<K> valueSet() {
 		var out = new HashSet<K>();
-		for (var val : objects.values()) {
-			out.addAll(val.keySet());
+		for (var set : objects.values()) {
+			out.addAll(set);
 		}
 		return out;
 	}
