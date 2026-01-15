@@ -100,11 +100,6 @@ public class IndexEqual<K, T> implements Index<K, T> {
 	}
 
 	@Override
-	public Set<K> getAfterFirst(Object key) {
-		throw new UnsupportedOperationException("Equal index has't this method");
-	}
-
-	@Override
 	public synchronized Set<K> valueSet() {
 		var out = new HashSet<K>();
 		var entries = objects.entrySet();

@@ -103,16 +103,6 @@ public class IndexSmallInt<K, T> implements Index<K, T> {
 	}
 
 	@Override
-	public synchronized Set<K> getAfterFirst(Object key) {
-		var out = new HashSet<K>();
-		Integer val = ((Integer) key) + 1;
-		if (val < size) {
-			out.addAll(objects[val]);
-		}
-		return out;
-	}
-
-	@Override
 	public synchronized Set<K> valueSet() {
 		var out = new HashSet<K>();
 		for (int i = 0; i < size; i++) {

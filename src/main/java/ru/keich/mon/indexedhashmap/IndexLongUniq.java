@@ -108,24 +108,6 @@ public class IndexLongUniq<K, T> implements Index<K, T> {
 	}
 
 	@Override
-	public synchronized Set<K> getAfterFirst(Object key) {
-		var out = new HashSet<K>();
-		var iter = objects.tailMap(key).entrySet().iterator();
-		if(iter.hasNext()) {
-			var e = iter.next();
-			if(!e.getKey().equals(key)) {
-				out.add(e.getValue());
-				return out;
-			}
-		}
-		if(iter.hasNext()) {
-			out.add(iter.next().getValue());
-			return out;
-		}
-		return out;
-	}
-
-	@Override
 	public synchronized Set<K> valueSet() {
 		return new HashSet<K>(objects.values());
 	}

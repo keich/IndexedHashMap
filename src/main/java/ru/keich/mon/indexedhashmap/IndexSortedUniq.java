@@ -106,23 +106,6 @@ public class IndexSortedUniq<K, T> implements Index<K, T> {
 		}
 		return out;
 	}
-	
-	@Override
-	public synchronized Set<K> getAfterFirst(Object key) {
-		var out = new HashSet<K>();
-		var iter = objects.tailMap(key).entrySet().iterator();
-		if(iter.hasNext()) {
-			var e = iter.next();
-			if(!e.getKey().equals(key)) {
-				out.add(e.getValue());
-				return out;
-			}
-		}
-		if(iter.hasNext()) {
-			out.add(iter.next().getValue());
-		}
-		return out;
-	}
 
 	@Override
 	public synchronized Set<K> valueSet() {
