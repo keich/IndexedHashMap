@@ -117,8 +117,8 @@ public class IndexedHashMap<K, T> implements Map<K, T> {
 		}
 	}
 
-	public void addIndexStatus(String name, Function<T, BaseStatus> mapper) {
-		index.put(name, new IndexStatus<K, T>(mapper));
+	public void addIndexSmallInt(String name, int size, Function<T, Integer> mapper) {
+		index.put(name, new IndexSmallInt<K, T>(mapper, size));
 	}
 
 	public void addIndex(String name, IndexType type, Function<T, Set<Object>> mapper) {

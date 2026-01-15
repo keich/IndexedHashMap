@@ -1,15 +1,13 @@
 package ru.keich.mon.indexedhashmap;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
 /*
- * Copyright 2025 the original author or authors.
+ * Copyright 2026 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,35 +22,36 @@ import java.util.function.Predicate;
  * limitations under the License.
  */
 
-public class IndexStatus<K, T> implements Index<K, T> {
-	private static final Object PRESENT = new Object();
-	private final Function<T, BaseStatus> mapper;
+public class IndexSmallInt<K, T> implements Index<K, T> {
+	;
+	private final Function<T, Integer> mapper;
+	private final HashSet<K> objects[];
+	private final int size;
+
 	@SuppressWarnings("unchecked")
-	private final Map<K, Object> objects[] = new Map[BaseStatus.length];
-	
-	public IndexStatus(Function<T, BaseStatus> mapper) {
+	public IndexSmallInt(Function<T, Integer> mapper, int size) {
 		this.mapper = mapper;
-		for (int i = 0; i < BaseStatus.length; i++) {
-			objects[i] = new HashMap<K, Object>();
+		this.size = size;
+		objects = new HashSet[size];
+		for (int i = 0; i < size; i++) {
+			objects[i] = new HashSet<K>();
 		}
 	}
-	
-	private void put(BaseStatus key, K id) {
-		BaseStatus status = (BaseStatus)key;
-		objects[status.getInt()].put(id, PRESENT);
+
+	private void put(Integer val, K id) {
+		objects[val].add(id);
 	}
 
-	private void del(BaseStatus key, K id) {
-		BaseStatus status = (BaseStatus)key;
-		objects[status.getInt()].remove(id);
+	private void del(Integer val, K id) {
+		objects[val].remove(id);
 	}
 
 	@Override
 	public synchronized Set<K> findByKey(Predicate<Object> predicate) {
 		var out = new HashSet<K>();
-		for(var val: BaseStatus.values()) {
-			if(predicate.test(val)) {
-				out.addAll(objects[val.getInt()].keySet());
+		for (Integer i = 0; i < size; i++) {
+			if (predicate.test(i)) {
+				out.addAll(objects[i]);
 			}
 		}
 		return out;
@@ -70,46 +69,45 @@ public class IndexStatus<K, T> implements Index<K, T> {
 
 	@Override
 	public synchronized Set<K> get(Object key) {
-		BaseStatus status = (BaseStatus)key;
-		return new HashSet<K>(objects[status.getInt()].keySet());
+		Integer val = (Integer) key;
+		return new HashSet<K>(objects[val]);
 	}
 
 	@Override
 	public synchronized Set<K> getBefore(Object key) {
-		BaseStatus status = (BaseStatus)key;
+		Integer val = (Integer) key;
 		var out = new HashSet<K>();
-		for(int i = 0; i < status.getInt(); i++) {
-			out.addAll(objects[i].keySet());
+		for (int i = 0; i < val; i++) {
+			out.addAll(objects[i]);
 		}
 		return out;
 	}
-	
+
 	@Override
 	public synchronized Set<K> getAfter(Object key) {
-		BaseStatus status = (BaseStatus)key;
+		Integer val = (Integer) key;
 		var out = new HashSet<K>();
-		for(int i = status.getInt() + 1; i < BaseStatus.length; i++) {
-			out.addAll(objects[i].keySet());
+		for (int i = val + 1; i < size; i++) {
+			out.addAll(objects[i]);
 		}
 		return out;
 	}
-	
+
 	@Override
 	public synchronized Set<K> getAfterEqual(Object key) {
-		BaseStatus status = (BaseStatus)key;
+		Integer val = (Integer) key;
 		var out = new HashSet<K>();
-		for(int i = status.getInt(); i < BaseStatus.length; i++) {
-			out.addAll(objects[i].keySet());
+		for (int i = val; i < size; i++) {
+			out.addAll(objects[i]);
 		}
 		return out;
 	}
-	
+
 	@Override
 	public synchronized Set<K> getAfterFirst(Object key) {
-		BaseStatus status = (BaseStatus)key;
-		int idx = status.getInt() + 1;
-		if(idx < BaseStatus.length) {
-			return new HashSet<K>(objects[idx].keySet());
+		Integer val = ((Integer) key) + 1;
+		if (val < size) {
+			return new HashSet<K>(objects[val]);
 		}
 		return Collections.emptySet();
 	}
@@ -117,26 +115,26 @@ public class IndexStatus<K, T> implements Index<K, T> {
 	@Override
 	public synchronized Set<K> valueSet() {
 		var out = new HashSet<K>();
-		for(int i = 0; i < BaseStatus.length; i++) {
-			out.addAll(objects[i].keySet());
+		for (int i = 0; i < size; i++) {
+			out.addAll(objects[i]);
 		}
 		return out;
 	}
 
 	@Override
 	public synchronized int getSize() {
-		return BaseStatus.length;
+		return size;
 	}
-	
+
 	@Override
 	public synchronized void removeOldAndAppend(K id, T oldObj, T newObj) {
-		var oldStatus = mapper.apply(oldObj);
-		var newStatus = mapper.apply(newObj);
-		
-		if(!oldStatus.equals(newStatus)) {
-			del(oldStatus, id);
-			put(newStatus, id);
+		var oldVal = mapper.apply(oldObj);
+		var newVal = mapper.apply(newObj);
+
+		if (!oldVal.equals(newVal)) {
+			del(oldVal, id);
+			put(newVal, id);
 		}
 	}
-	
+
 }
