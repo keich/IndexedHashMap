@@ -100,7 +100,7 @@ public class IndexSorted<K, T> implements Index<K, T> {
 	@Override
 	public synchronized Set<K> getAfter(Object key) {
 		var out = new HashSet<K>();
-		var iter = objects.tailMap(key).sequencedEntrySet().iterator();
+		var iter = objects.tailMap(key).entrySet().iterator();
 		if(iter.hasNext()) {
 			var e = iter.next();
 			if(!e.getKey().equals(key)) {
