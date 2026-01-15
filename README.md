@@ -22,7 +22,7 @@ Used as an in-memory key-value database for Objects.
   	<dependency>
   		<groupId>ru.keich.mon</groupId>
   		<artifactId>IndexedHashMap</artifactId>
-  		<version>0.0.1</version>
+  		<version>0.2.0</version>
   	</dependency>
 ```
 
@@ -97,13 +97,13 @@ public static Set<Object> getNameForIndex(TestEntity e) {
 2. Do before insert data
 
 ```java
-store.addIndex(TestEntity.FIELD_NAME, IndexType.EQUAL, TestEntity::getNameForIndex);
+store.addIndexEqual(TestEntity.FIELD_NAME, TestEntity::getNameForIndex);
 ```
 
 3. Query objects from store
 
 ```java
-QueryPredicate repdicate = Predicates.notEqual(TestEntity.FIELD_NAME, "Hello world");
+QueryPredicate repdicate = QueryPredicate.notEqual(TestEntity.FIELD_NAME, "Hello world");
 Set<String> result = store.keySet(repdicate);
 result.forEach(key -> {
 	System.out.println(store.get(key));
@@ -112,29 +112,29 @@ result.forEach(key -> {
 
 ### Index data type support
 
-Any object with hash and equal or implement Comparable.(depending on predicate)
+Any object with hash and equal or any object implements Comparable.(depends on predicate)
 
-| Operator | Description  | Long | Class String  | Class Map.Entry | Class Set               |
-| -------- | ------------ | -----| ------------- | --------------- | ----------------------- |
-| NE       | Not equal    | ok   | ok            | Undefined behavior | Undefined behavior. Use NI |
-| EQ       | Equal        | ok   | ok            | Equal key and value | Return object with set contains object  |
-| LT       | Less than    | ok   | ok            | Exception   | Exception  |
-| GT       | Gather than  | ok   | ok            | Exception   | Exception  |
-| GE       | Gather equal | ok   | ok            | Exception   | Exception  |
-| CO       | Contain      | Undefined behavior | search sub string | search Entry key equal and value sub string  |
-| NC       | Not contain  | Undefined behavior  | vice versa CO |  vice versa CO  | Some string in set has sub string |
-| NI       | Not include(uses for Set)  | Undefined behavior  |    vice versa CO   |   Undefined behavior  |  Return object with set not contains object |
+| Operator | Description          | Long | Class String  | Class Map.Entry     | Class Set                     |
+| -------- | -------------------- | -----| ------------- | ------------------- | ----------------------------- |
+| EQ       | Equal                | ok   | ok            | The key is equal and the value is equal | A object in set is equal the specified object  |
+| NE       | Not equal            | ok   | ok            | Undefined behavior  | Undefined behavior. Use NI    |
+| LT       | Less than            | ok   | ok            | Exception           | Exception                     |
+| GT       | Gather than          | ok   | ok            | Exception           | Exception                     |
+| GE       | Gather equal         | ok   | ok            | Exception           | Exception                     |
+| CO       | Contain(Like)        | Undefined behavior | The string contains the specified string | The key is equal and the value contains the specified string  | A string in the set contains the specified string |
+| NC       | Not contain(Not Like)| Undefined behavior | Vice versa CO |  The key is equal and the value not contains the specified string  | Undefined behavior |
+| NI       | Not include(uses for Set)  | Undefined behavior  |    Vice versa CO   |   Undefined behavior  |  Return object with set not contains object |
 
 
 ### Index types
 
-| Index class    | Description             |
-| -------------- | ----------------------- |
-| IndexEqual     | Index from HashMap      |
-| IndexLongUniq  | Index from TreeMap for uniq Long values |
-| IndexSorted    | Index from TreeMap for Objects implemented Comparable |
+| Index class     | Description             |
+| --------------- | ----------------------- |
+| IndexEqual      | Index from HashMap      |
+| IndexLongUniq   | Index from TreeMap for uniq Long values |
+| IndexSorted     | Index from TreeMap for Objects implemented Comparable |
 | IndexSortedUniq | Index from TreeMap for uniq Objects implemented Comparable |
-| IndexStatus | Index for class BaseStatus |
+| IndexSmallInt   | Index for Integer with small range(Uses array) |
 
 ## Work without indexes
 
