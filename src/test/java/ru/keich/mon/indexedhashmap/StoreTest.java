@@ -10,8 +10,6 @@ import java.util.function.Predicate;
 
 import org.junit.jupiter.api.Test;
 
-import ru.keich.mon.indexedhashmap.query.QueryPredicate;
-
 /*
  * Copyright 2025 the original author or authors.
  *
