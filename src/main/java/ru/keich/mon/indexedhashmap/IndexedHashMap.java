@@ -34,22 +34,10 @@ import ru.keich.mon.indexedhashmap.query.QueryPredicate;
 
 public class IndexedHashMap<K, T> implements Map<K, T> {
 
-	static final public String METRIC_NAME_MAP = "indexedhashmap_";
-	static final public String METRIC_NAME_OPERATION = "operation";
-	static final public String METRIC_NAME_SERVICENAME = "servicename";
-
-	static final public String METRIC_NAME_OBJECTS = "objects_";
-	static final public String METRIC_NAME_SIZE = "size";
-
-	static final public String METRIC_NAME_ADDED = "insered";
-	static final public String METRIC_NAME_UPDATED = "updated";
-	static final public String METRIC_NAME_REMOVED = "removed";
-	static final public String METRIC_NAME_INDEX = "index";
-
 	private Map<K, T> cache = new ConcurrentHashMap<>();
 	private Map<String, Index<K, T>> index = new HashMap<>();
 	private Map<String, Query<T>> query = new HashMap<>();
-	
+
 	private AtomicLong metricAdded = new AtomicLong(0);
 	private AtomicLong metricUpdated = new AtomicLong(0);
 	private AtomicLong metricRemoved = new AtomicLong(0);
