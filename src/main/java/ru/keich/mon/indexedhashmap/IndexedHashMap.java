@@ -8,15 +8,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tags;
 import ru.keich.mon.indexedhashmap.query.QueryPredicate;
 
 /*
@@ -49,71 +46,20 @@ public class IndexedHashMap<K, T> implements Map<K, T> {
 	static final public String METRIC_NAME_REMOVED = "removed";
 	static final public String METRIC_NAME_INDEX = "index";
 
-	private final MeterRegistry registry;
-	private final String serviceName;
-
-	private Counter metricAdded = EmptyCounter.EMPTY;
-	private Counter metricUpdated = EmptyCounter.EMPTY;
-	private Counter metricRemoved = EmptyCounter.EMPTY;
-	private final AtomicInteger metricObjectsSize = new AtomicInteger(0);
-
-	public static class EmptyCounter implements Counter {
-
-		public static EmptyCounter EMPTY = new EmptyCounter();
-
-		@Override
-		public Id getId() {
-			return null;
-		}
-
-		@Override
-		public void increment(double amount) {
-
-		}
-
-		@Override
-		public double count() {
-			return 0;
-		}
-
-	}
-
 	private Map<K, T> cache = new ConcurrentHashMap<>();
 	private Map<String, Index<K, T>> index = new HashMap<>();
 	private Map<String, Query<T>> query = new HashMap<>();
-
-	public IndexedHashMap(MeterRegistry registry, String serviceName) {
-		super();
-
-		this.registry = registry;
-		this.serviceName = serviceName;
-
-		if (registry != null) {
-			metricAdded = registry.counter(METRIC_NAME_MAP + METRIC_NAME_OPERATION, METRIC_NAME_OPERATION,
-					METRIC_NAME_ADDED, METRIC_NAME_SERVICENAME, serviceName);
-
-			metricUpdated = registry.counter(METRIC_NAME_MAP + METRIC_NAME_OPERATION, METRIC_NAME_OPERATION,
-					METRIC_NAME_UPDATED, METRIC_NAME_SERVICENAME, serviceName);
-
-			metricRemoved = registry.counter(METRIC_NAME_MAP + METRIC_NAME_OPERATION, METRIC_NAME_OPERATION,
-					METRIC_NAME_REMOVED, METRIC_NAME_SERVICENAME, serviceName);
-
-			registry.gauge(METRIC_NAME_MAP + METRIC_NAME_OBJECTS + METRIC_NAME_SIZE,
-					Tags.of(METRIC_NAME_SERVICENAME, serviceName), metricObjectsSize);
-		}
-	}
 	
-	private void registerIndexMetric(String name) {
-		if (registry != null) {
-			var tags = Tags.of(METRIC_NAME_SERVICENAME, serviceName, METRIC_NAME_INDEX, name.toLowerCase());
-			registry.gauge(METRIC_NAME_MAP + METRIC_NAME_INDEX + "_" + METRIC_NAME_SIZE, tags,
-					index.get(name).getSize());
-		}
+	private AtomicLong metricAdded = new AtomicLong(0);
+	private AtomicLong metricUpdated = new AtomicLong(0);
+	private AtomicLong metricRemoved = new AtomicLong(0);
+
+	public IndexedHashMap() {
+		super();
 	}
 
 	public void addIndexLongUniq(String name, Function<T, Long> mapper) {
 		index.put(name, new IndexLongUniq<K, T>(mapper));
-		registerIndexMetric(name);
 	}
 
 	public void addIndexSmallInt(String name, int size, Function<T, Integer> mapper) {
@@ -121,18 +67,15 @@ public class IndexedHashMap<K, T> implements Map<K, T> {
 	}
 
 	public void addIndexEqual(String name, Function<T, Set<Object>> mapper) {
-		index.put(name, new IndexEqual<K, T>(mapper));
-		registerIndexMetric(name);
+		index.put(name, new IndexEqual<K, T>(mapper));;
 	}
 	
 	public void addIndexSorted(String name, Function<T, Set<Object>> mapper) {
 		index.put(name, new IndexSorted<K, T>(mapper));
-		registerIndexMetric(name);
 	}
 	
 	public void addIndexUniqSorted(String name, Function<T, Set<Object>> mapper) {
 		index.put(name, new IndexSortedUniq<K, T>(mapper));
-		registerIndexMetric(name);
 	}
 
 	public void addQueryFieldLong(String name, Function<T, Long> mapper) {
@@ -157,7 +100,7 @@ public class IndexedHashMap<K, T> implements Map<K, T> {
 		for (var entry : index.entrySet()) {
 			entry.getValue().remove(id, obj);
 		}
-		metricRemoved.increment();
+		metricRemoved.incrementAndGet();
 		return null;
 	}
 	
@@ -171,7 +114,7 @@ public class IndexedHashMap<K, T> implements Map<K, T> {
 		for (var entry : index.entrySet()) {
 			entry.getValue().removeOldAndAppend(id, oldObj, newObj);
 		}
-		metricUpdated.increment();
+		metricUpdated.incrementAndGet();
 		return newObj;
 	}
 
@@ -179,13 +122,12 @@ public class IndexedHashMap<K, T> implements Map<K, T> {
 		for (var entry : index.entrySet()) {
 			entry.getValue().append(id, obj);
 		}
-		metricAdded.increment();
+		metricAdded.incrementAndGet();
 		return obj;
 	}
 
 	@Override
 	public T compute(K key, BiFunction<? super K, ? super T, ? extends T> remappingFunction) {
-		metricObjectsSize.set(cache.size());
 		return cache.compute(key, (k, oldObj) -> {
 			var newObj = remappingFunction.apply(k, oldObj);
 			if (newObj == null) {
@@ -327,6 +269,13 @@ public class IndexedHashMap<K, T> implements Map<K, T> {
 	@Override
 	public Set<Entry<K, T>> entrySet() {
 		return cache.entrySet();
+	}
+	
+	public Metrics getMetrics() {
+		var idx = index.entrySet().stream()
+				.collect(Collectors.toMap(Map.Entry::getKey, e -> Long.valueOf(e.getValue().getSize())));
+		var out = new Metrics(Long.valueOf(cache.size()), metricAdded.longValue(), metricUpdated.longValue(), metricRemoved.longValue(), idx);
+		return out;
 	}
 	
 }

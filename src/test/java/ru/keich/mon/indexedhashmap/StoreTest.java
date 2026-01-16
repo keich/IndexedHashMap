@@ -84,14 +84,14 @@ public class StoreTest {
 
 	@Test
 	public void queryEqualByField() {
-		var store = new IndexedHashMap<String, TestEntity>(null, this.getClass().getSimpleName());
+		var store = new IndexedHashMap<String, TestEntity>();
 		store.addQueryField(TestEntity.FIELD_NAME, TestEntity::getNameForIndex);
 		queryEqual(store);
 	}
 
 	@Test
 	public void queryEqualByIndex() {
-		var store = new IndexedHashMap<String, TestEntity>(null, this.getClass().getSimpleName());
+		var store = new IndexedHashMap<String, TestEntity>();
 		store.addIndexEqual(TestEntity.FIELD_NAME, TestEntity::getNameForIndex);
 		queryEqual(store);
 	}
@@ -108,14 +108,14 @@ public class StoreTest {
 
 	@Test
 	public void queryNotEqualByField() {
-		var store = new IndexedHashMap<String, TestEntity>(null, this.getClass().getSimpleName());
+		var store = new IndexedHashMap<String, TestEntity>();
 		store.addQueryField(TestEntity.FIELD_NAME, TestEntity::getNameForIndex);
 		queryNotEqual(store);
 	}
 
 	@Test
 	public void queryNotEqualByIndex() {
-		var store = new IndexedHashMap<String, TestEntity>(null, this.getClass().getSimpleName());
+		var store = new IndexedHashMap<String, TestEntity>();
 		store.addIndexEqual(TestEntity.FIELD_NAME, TestEntity::getNameForIndex);
 		queryNotEqual(store);
 	}
@@ -130,14 +130,14 @@ public class StoreTest {
 
 	@Test
 	public void queryLessThanByField() {
-		var store = new IndexedHashMap<String, TestEntity>(null, this.getClass().getSimpleName());
+		var store = new IndexedHashMap<String, TestEntity>();
 		store.addQueryFieldLong(TestEntity.FIELD_VERSION, TestEntity::getVersionForIndex);
 		queryLessThan(store);
 	}
 
 	@Test
 	public void queryLessThanByIndex() {
-		var store = new IndexedHashMap<String, TestEntity>(null, this.getClass().getSimpleName());
+		var store = new IndexedHashMap<String, TestEntity>();
 		store.addIndexLongUniq(TestEntity.FIELD_VERSION, TestEntity::getVersionForIndex);
 		queryLessThan(store);
 	}
@@ -154,14 +154,14 @@ public class StoreTest {
 
 	@Test
 	public void queryGreaterEqualByField() {
-		var store = new IndexedHashMap<String, TestEntity>(null, this.getClass().getSimpleName());
+		var store = new IndexedHashMap<String, TestEntity>();
 		store.addQueryFieldLong(TestEntity.FIELD_VERSION, TestEntity::getVersionForIndex);
 		queryGreaterEqual(store);
 	}
 
 	@Test
 	public void queryGreaterEqualByIndex() {
-		var store = new IndexedHashMap<String, TestEntity>(null, this.getClass().getSimpleName());
+		var store = new IndexedHashMap<String, TestEntity>();
 		store.addIndexLongUniq(TestEntity.FIELD_VERSION, TestEntity::getVersionForIndex);
 		queryGreaterEqual(store);
 	}
@@ -178,14 +178,14 @@ public class StoreTest {
 
 	@Test
 	public void queryGreaterThanByField() {
-		var store = new IndexedHashMap<String, TestEntity>(null, this.getClass().getSimpleName());
+		var store = new IndexedHashMap<String, TestEntity>();
 		store.addQueryFieldLong(TestEntity.FIELD_VERSION, TestEntity::getVersionForIndex);
 		queryGreaterThan(store);
 	}
 
 	@Test
 	public void queryGreaterThanByIndex() {
-		var store = new IndexedHashMap<String, TestEntity>(null, this.getClass().getSimpleName());
+		var store = new IndexedHashMap<String, TestEntity>();
 		store.addIndexLongUniq(TestEntity.FIELD_VERSION, TestEntity::getVersionForIndex);
 		queryGreaterThan(store);
 	}
@@ -202,14 +202,14 @@ public class StoreTest {
 
 	@Test
 	public void queryContainStringByField() {
-		var store = new IndexedHashMap<String, TestEntity>(null, this.getClass().getSimpleName());
+		var store = new IndexedHashMap<String, TestEntity>();
 		store.addQueryField(TestEntity.FIELD_NAME, TestEntity::getNameUpperCaseForIndex);
 		queryContainString(store);
 	}
 
 	@Test
 	public void queryContainStringByIndex() {
-		var store = new IndexedHashMap<String, TestEntity>(null, this.getClass().getSimpleName());
+		var store = new IndexedHashMap<String, TestEntity>();
 		store.addIndexEqual(TestEntity.FIELD_NAME, TestEntity::getNameUpperCaseForIndex);
 		queryContainString(store);
 	}
@@ -226,14 +226,14 @@ public class StoreTest {
 
 	@Test
 	public void queryNotContainStringByField() {
-		var store = new IndexedHashMap<String, TestEntity>(null, this.getClass().getSimpleName());
+		var store = new IndexedHashMap<String, TestEntity>();
 		store.addQueryField(TestEntity.FIELD_NAME, TestEntity::getNameUpperCaseForIndex);
 		queryNotContainString(store);
 	}
 
 	@Test
 	public void queryNotContainStringByIndex() {
-		var store = new IndexedHashMap<String, TestEntity>(null, this.getClass().getSimpleName());
+		var store = new IndexedHashMap<String, TestEntity>();
 		store.addIndexEqual(TestEntity.FIELD_NAME, TestEntity::getNameUpperCaseForIndex);
 		queryNotContainString(store);
 	}
@@ -251,14 +251,14 @@ public class StoreTest {
 
 	@Test
 	public void queryContainMapByField() {
-		var store = new IndexedHashMap<String, TestEntity>(null, this.getClass().getSimpleName());
+		var store = new IndexedHashMap<String, TestEntity>();
 		store.addQueryField(TestEntity.FIELD_SOMEMAP, TestEntity::getSomeMapForIndex);
 		queryContainMap(store);
 	}
 
 	@Test
 	public void queryContainMapByIndex() {
-		var store = new IndexedHashMap<String, TestEntity>(null, this.getClass().getSimpleName());
+		var store = new IndexedHashMap<String, TestEntity>();
 		store.addIndexEqual(TestEntity.FIELD_SOMEMAP, TestEntity::getSomeMapForIndex);
 		queryContainMap(store);
 	}
@@ -276,14 +276,14 @@ public class StoreTest {
 
 	@Test
 	public void queryNotContainMapByField() {
-		var store = new IndexedHashMap<String, TestEntity>(null, this.getClass().getSimpleName());
+		var store = new IndexedHashMap<String, TestEntity>();
 		store.addQueryField(TestEntity.FIELD_SOMEMAP, TestEntity::getSomeMapForIndex);
 		queryNotContainMap(store);
 	}
 
 	@Test
 	public void queryNotContainMapByIndex() {
-		var store = new IndexedHashMap<String, TestEntity>(null, this.getClass().getSimpleName());
+		var store = new IndexedHashMap<String, TestEntity>();
 		store.addIndexEqual(TestEntity.FIELD_SOMEMAP, TestEntity::getSomeMapForIndex);
 		queryNotContainMap(store);
 	}
@@ -300,14 +300,14 @@ public class StoreTest {
 
 	@Test
 	public void queryNotIncludeSetByField() {
-		var store = new IndexedHashMap<String, TestEntity>(null, this.getClass().getSimpleName());
+		var store = new IndexedHashMap<String, TestEntity>();
 		store.addQueryField(TestEntity.FIELD_SOMESET, TestEntity::getSomeSetForIndex);
 		queryNotIncludeSet(store);
 	}
 
 	@Test
 	public void queryNotIncludeSetByIndex() {
-		var store = new IndexedHashMap<String, TestEntity>(null, this.getClass().getSimpleName());
+		var store = new IndexedHashMap<String, TestEntity>();
 		store.addIndexEqual(TestEntity.FIELD_SOMESET, TestEntity::getSomeSetForIndex);
 		queryNotIncludeSet(store);
 	}
