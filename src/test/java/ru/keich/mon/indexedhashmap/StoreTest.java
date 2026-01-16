@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import org.junit.jupiter.api.Test;
 
@@ -72,80 +73,46 @@ public class StoreTest {
 		store.put(entity3.getId(), entity3);
 	}
 
-	private void queryEqual(IndexedHashMap<String, TestEntity> store) {
+	@Test
+	public void queryEqualByField() {
+		var store = new IndexedHashMap<String, TestEntity>();
 		putDefaultTestEntities(store);
-		var repdicate = QueryPredicate.equal(TestEntity.FIELD_NAME, NAME1_VALUE);
-		var result = store.keySet(repdicate);
+		var result = store.keySetPredicate(TestEntity::getNameForIndex,  k -> k.equals(NAME1_VALUE));
 		assertEquals(1, result.size());
 		assertTrue(result.contains(ID1_VALUE));
 		assertTrue(!result.contains(ID2_VALUE));
 		assertTrue(!result.contains(ID3_VALUE));
-	}
-
-	@Test
-	public void queryEqualByField() {
-		var store = new IndexedHashMap<String, TestEntity>();
-		store.addQueryField(TestEntity.FIELD_NAME, TestEntity::getNameForIndex);
-		queryEqual(store);
 	}
 
 	@Test
 	public void queryEqualByIndex() {
 		var store = new IndexedHashMap<String, TestEntity>();
 		store.addIndexEqual(TestEntity.FIELD_NAME, TestEntity::getNameForIndex);
-		queryEqual(store);
-	}
-
-	public void queryNotEqual(IndexedHashMap<String, TestEntity> store) {
 		putDefaultTestEntities(store);
-		var repdicate = QueryPredicate.notEqual(TestEntity.FIELD_NAME, NAME1_VALUE);
-		var result = store.keySet(repdicate);
-		assertEquals(2, result.size());
-		assertTrue(!result.contains(ID1_VALUE));
-		assertTrue(result.contains(ID2_VALUE));
-		assertTrue(result.contains(ID3_VALUE));
+		var result = store.keySetIndexEq(TestEntity.FIELD_NAME, NAME1_VALUE);
+		assertEquals(1, result.size());
+		assertTrue(result.contains(ID1_VALUE));
+		assertTrue(!result.contains(ID2_VALUE));
+		assertTrue(!result.contains(ID3_VALUE));
 	}
 
 	@Test
 	public void queryNotEqualByField() {
 		var store = new IndexedHashMap<String, TestEntity>();
-		store.addQueryField(TestEntity.FIELD_NAME, TestEntity::getNameForIndex);
-		queryNotEqual(store);
+		putDefaultTestEntities(store);
+		var result = store.keySetPredicate(TestEntity::getNameForIndex, k -> !k.equals(NAME1_VALUE));
+		assertEquals(2, result.size());
+		assertTrue(!result.contains(ID1_VALUE));
+		assertTrue(result.contains(ID2_VALUE));
+		assertTrue(result.contains(ID3_VALUE));
 	}
 
 	@Test
 	public void queryNotEqualByIndex() {
 		var store = new IndexedHashMap<String, TestEntity>();
 		store.addIndexEqual(TestEntity.FIELD_NAME, TestEntity::getNameForIndex);
-		queryNotEqual(store);
-	}
-
-	public void queryLessThan(IndexedHashMap<String, TestEntity> store) {
 		putDefaultTestEntities(store);
-		var repdicate = QueryPredicate.lessThan(TestEntity.FIELD_VERSION, VERSION2_VALUE);
-		var result = store.keySet(repdicate);
-		assertEquals(1, result.size());
-		assertTrue(result.contains(ID1_VALUE));
-	}
-
-	@Test
-	public void queryLessThanByField() {
-		var store = new IndexedHashMap<String, TestEntity>();
-		store.addQueryFieldLong(TestEntity.FIELD_VERSION, TestEntity::getVersionForIndex);
-		queryLessThan(store);
-	}
-
-	@Test
-	public void queryLessThanByIndex() {
-		var store = new IndexedHashMap<String, TestEntity>();
-		store.addIndexLongUniq(TestEntity.FIELD_VERSION, TestEntity::getVersionForIndex);
-		queryLessThan(store);
-	}
-
-	public void queryGreaterEqual(IndexedHashMap<String, TestEntity> store) {
-		putDefaultTestEntities(store);
-		var repdicate = QueryPredicate.greaterEqual(TestEntity.FIELD_VERSION, VERSION2_VALUE);
-		var result = store.keySet(repdicate);
+		var result = store.keySetIndexPredicate(TestEntity.FIELD_NAME, k -> !k.equals(NAME1_VALUE));
 		assertEquals(2, result.size());
 		assertTrue(!result.contains(ID1_VALUE));
 		assertTrue(result.contains(ID2_VALUE));
@@ -153,47 +120,78 @@ public class StoreTest {
 	}
 
 	@Test
+	public void queryLessThanByField() {
+		var store = new IndexedHashMap<String, TestEntity>();
+		putDefaultTestEntities(store);
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		var result = store.keySetPredicate(TestEntity::getVersionForIndex, k -> ((Comparable)k).compareTo(VERSION2_VALUE) < 0);
+		assertEquals(1, result.size());
+		assertTrue(result.contains(ID1_VALUE));
+	}
+
+	@Test
+	public void queryLessThanByIndex() {
+		var store = new IndexedHashMap<String, TestEntity>();
+		store.addIndexLongUniq(TestEntity.FIELD_VERSION, TestEntity::getVersionForIndexLong);
+		putDefaultTestEntities(store);
+		var result = store.keySetIndexGetBefore(TestEntity.FIELD_VERSION, VERSION2_VALUE);
+		assertEquals(1, result.size());
+		assertTrue(result.contains(ID1_VALUE));
+	}
+
+	@Test
 	public void queryGreaterEqualByField() {
 		var store = new IndexedHashMap<String, TestEntity>();
-		store.addQueryFieldLong(TestEntity.FIELD_VERSION, TestEntity::getVersionForIndex);
-		queryGreaterEqual(store);
+		putDefaultTestEntities(store);
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		var result = store.keySetPredicate(TestEntity::getVersionForIndex, k -> ((Comparable)k).compareTo(VERSION2_VALUE) >= 0);
+		assertEquals(2, result.size());
+		assertTrue(!result.contains(ID1_VALUE));
+		assertTrue(result.contains(ID2_VALUE));
+		assertTrue(result.contains(ID3_VALUE));
 	}
 
 	@Test
 	public void queryGreaterEqualByIndex() {
 		var store = new IndexedHashMap<String, TestEntity>();
-		store.addIndexLongUniq(TestEntity.FIELD_VERSION, TestEntity::getVersionForIndex);
-		queryGreaterEqual(store);
-	}
-
-	public void queryGreaterThan(IndexedHashMap<String, TestEntity> store) {
+		store.addIndexLongUniq(TestEntity.FIELD_VERSION, TestEntity::getVersionForIndexLong);
 		putDefaultTestEntities(store);
-		var repdicate = QueryPredicate.greaterThan(TestEntity.FIELD_VERSION, VERSION2_VALUE);
-		var result = store.keySet(repdicate);
-		assertEquals(1, result.size());
+		var result = store.keySetIndexGetAfterEqual(TestEntity.FIELD_VERSION, VERSION2_VALUE);
+		assertEquals(2, result.size());
 		assertTrue(!result.contains(ID1_VALUE));
-		assertTrue(!result.contains(ID2_VALUE));
+		assertTrue(result.contains(ID2_VALUE));
 		assertTrue(result.contains(ID3_VALUE));
 	}
 
 	@Test
 	public void queryGreaterThanByField() {
 		var store = new IndexedHashMap<String, TestEntity>();
-		store.addQueryFieldLong(TestEntity.FIELD_VERSION, TestEntity::getVersionForIndex);
-		queryGreaterThan(store);
+		putDefaultTestEntities(store);
+		@SuppressWarnings({ "rawtypes", "unchecked" })
+		var result = store.keySetPredicate(TestEntity::getVersionForIndex, k -> ((Comparable)k).compareTo(VERSION2_VALUE) > 0);
+		assertEquals(1, result.size());
+		assertTrue(!result.contains(ID1_VALUE));
+		assertTrue(!result.contains(ID2_VALUE));
+		assertTrue(result.contains(ID3_VALUE));
 	}
 
 	@Test
 	public void queryGreaterThanByIndex() {
 		var store = new IndexedHashMap<String, TestEntity>();
-		store.addIndexLongUniq(TestEntity.FIELD_VERSION, TestEntity::getVersionForIndex);
-		queryGreaterThan(store);
+		store.addIndexLongUniq(TestEntity.FIELD_VERSION, TestEntity::getVersionForIndexLong);
+		putDefaultTestEntities(store);
+		var result = store.keySetIndexGetAfter(TestEntity.FIELD_VERSION, VERSION2_VALUE);
+		assertEquals(1, result.size());
+		assertTrue(!result.contains(ID1_VALUE));
+		assertTrue(!result.contains(ID2_VALUE));
+		assertTrue(result.contains(ID3_VALUE));
 	}
 
-	public void queryContainString(IndexedHashMap<String, TestEntity> store) {
+	@Test
+	public void queryContainStringByField() {
+		var store = new IndexedHashMap<String, TestEntity>();
 		putDefaultTestEntities(store);
-		var p1 = QueryPredicate.contain(TestEntity.FIELD_NAME, "Test");
-		var result = store.keySet(p1);
+		var result = store.keySetPredicate(TestEntity::getNameUpperCaseForIndex, k -> k.toString().contains("Test"));
 		assertEquals(1, result.size());
 		assertTrue(result.contains(ID1_VALUE));
 		assertTrue(!result.contains(ID2_VALUE));
@@ -201,23 +199,22 @@ public class StoreTest {
 	}
 
 	@Test
-	public void queryContainStringByField() {
-		var store = new IndexedHashMap<String, TestEntity>();
-		store.addQueryField(TestEntity.FIELD_NAME, TestEntity::getNameUpperCaseForIndex);
-		queryContainString(store);
-	}
-
-	@Test
 	public void queryContainStringByIndex() {
 		var store = new IndexedHashMap<String, TestEntity>();
 		store.addIndexEqual(TestEntity.FIELD_NAME, TestEntity::getNameUpperCaseForIndex);
-		queryContainString(store);
+		putDefaultTestEntities(store);
+		var result = store.keySetIndexPredicate(TestEntity.FIELD_NAME, k -> k.toString().contains("Test"));
+		assertEquals(1, result.size());
+		assertTrue(result.contains(ID1_VALUE));
+		assertTrue(!result.contains(ID2_VALUE));
+		assertTrue(!result.contains(ID3_VALUE));
 	}
 
-	public void queryNotContainString(IndexedHashMap<String, TestEntity> store) {
+	@Test
+	public void queryNotContainStringByField() {
+		var store = new IndexedHashMap<String, TestEntity>();
 		putDefaultTestEntities(store);
-		var p1 = QueryPredicate.notContain(TestEntity.FIELD_NAME, "Test");
-		var result = store.keySet(p1);
+		var result = store.keySetPredicate(TestEntity::getNameUpperCaseForIndex, k -> !k.toString().contains("Test"));
 		assertEquals(2, result.size());
 		assertTrue(!result.contains(ID1_VALUE));
 		assertTrue(result.contains(ID2_VALUE));
@@ -225,24 +222,31 @@ public class StoreTest {
 	}
 
 	@Test
-	public void queryNotContainStringByField() {
-		var store = new IndexedHashMap<String, TestEntity>();
-		store.addQueryField(TestEntity.FIELD_NAME, TestEntity::getNameUpperCaseForIndex);
-		queryNotContainString(store);
-	}
-
-	@Test
 	public void queryNotContainStringByIndex() {
 		var store = new IndexedHashMap<String, TestEntity>();
 		store.addIndexEqual(TestEntity.FIELD_NAME, TestEntity::getNameUpperCaseForIndex);
-		queryNotContainString(store);
+		putDefaultTestEntities(store);
+		var result = store.keySetIndexPredicate(TestEntity.FIELD_NAME, k -> !k.toString().contains("Test"));
+		assertEquals(2, result.size());
+		assertTrue(!result.contains(ID1_VALUE));
+		assertTrue(result.contains(ID2_VALUE));
+		assertTrue(result.contains(ID3_VALUE));
 	}
 
-	public void queryContainMap(IndexedHashMap<String, TestEntity> store) {
+	@Test
+	public void queryContainMapByField() {
+		var store = new IndexedHashMap<String, TestEntity>();
 		putDefaultTestEntities(store);
-		var testEntry = Map.entry(ENTRY13_VALUE.getKey(), "Test");
-		var p1 = QueryPredicate.contain(TestEntity.FIELD_SOMEMAP, testEntry);
-		var result = store.keySet(p1);
+		var testEntry = Map.entry(ENTRY13_VALUE.getKey(), "Test");		
+		@SuppressWarnings("rawtypes")
+		Predicate<Object> predicate = (o) -> {
+			var entry1 = (Entry) o;
+			if (entry1.getKey().equals(testEntry.getKey())) {
+				return entry1.getValue().toString().contains(testEntry.getValue().toString());
+			}
+			return false;
+		};
+		var result = store.keySetPredicate(TestEntity::getSomeMapForIndex, predicate);
 		assertEquals(1, result.size());
 		assertTrue(result.contains(ID1_VALUE));
 		assertTrue(!result.contains(ID2_VALUE));
@@ -250,24 +254,20 @@ public class StoreTest {
 	}
 
 	@Test
-	public void queryContainMapByField() {
-		var store = new IndexedHashMap<String, TestEntity>();
-		store.addQueryField(TestEntity.FIELD_SOMEMAP, TestEntity::getSomeMapForIndex);
-		queryContainMap(store);
-	}
-
-	@Test
 	public void queryContainMapByIndex() {
 		var store = new IndexedHashMap<String, TestEntity>();
 		store.addIndexEqual(TestEntity.FIELD_SOMEMAP, TestEntity::getSomeMapForIndex);
-		queryContainMap(store);
-	}
-	
-	public void queryNotContainMap(IndexedHashMap<String, TestEntity> store) {
 		putDefaultTestEntities(store);
-		var testEntry = Map.entry(ENTRY13_VALUE.getKey(), "Hello");
-		var p1 = QueryPredicate.notContain(TestEntity.FIELD_SOMEMAP, testEntry);
-		var result = store.keySet(p1);
+		var testEntry = Map.entry(ENTRY13_VALUE.getKey(), "Test");		
+		@SuppressWarnings("rawtypes")
+		Predicate<Object> predicate = (o) -> {
+			var entry1 = (Entry) o;
+			if (entry1.getKey().equals(testEntry.getKey())) {
+				return entry1.getValue().toString().contains(testEntry.getValue().toString());
+			}
+			return false;
+		};
+		var result = store.keySetIndexPredicate(TestEntity.FIELD_SOMEMAP, predicate);
 		assertEquals(1, result.size());
 		assertTrue(result.contains(ID1_VALUE));
 		assertTrue(!result.contains(ID2_VALUE));
@@ -277,21 +277,51 @@ public class StoreTest {
 	@Test
 	public void queryNotContainMapByField() {
 		var store = new IndexedHashMap<String, TestEntity>();
-		store.addQueryField(TestEntity.FIELD_SOMEMAP, TestEntity::getSomeMapForIndex);
-		queryNotContainMap(store);
+		putDefaultTestEntities(store);
+		var testEntry = Map.entry(ENTRY13_VALUE.getKey(), "Hello");
+		@SuppressWarnings("rawtypes")
+		Predicate<Object> predicate = (o) -> {
+			var entry1 = (Entry) o;
+			if (entry1.getKey().equals(testEntry.getKey())) {
+				return !entry1.getValue().toString().contains(testEntry.getValue().toString());
+			}
+			return false;
+		};
+		var result = store.keySetPredicate( TestEntity::getSomeMapForIndex, predicate);
+		assertEquals(1, result.size());
+		assertTrue(result.contains(ID1_VALUE));
+		assertTrue(!result.contains(ID2_VALUE));
+		assertTrue(!result.contains(ID3_VALUE));
 	}
 
 	@Test
 	public void queryNotContainMapByIndex() {
 		var store = new IndexedHashMap<String, TestEntity>();
 		store.addIndexEqual(TestEntity.FIELD_SOMEMAP, TestEntity::getSomeMapForIndex);
-		queryNotContainMap(store);
+		putDefaultTestEntities(store);
+		var testEntry = Map.entry(ENTRY13_VALUE.getKey(), "Hello");
+		@SuppressWarnings("rawtypes")
+		Predicate<Object> predicate = (o) -> {
+			var entry1 = (Entry) o;
+			if (entry1.getKey().equals(testEntry.getKey())) {
+				return !entry1.getValue().toString().contains(testEntry.getValue().toString());
+			}
+			return false;
+		};
+		var result = store.keySetIndexPredicate(TestEntity.FIELD_SOMEMAP, predicate);
+		assertEquals(1, result.size());
+		assertTrue(result.contains(ID1_VALUE));
+		assertTrue(!result.contains(ID2_VALUE));
+		assertTrue(!result.contains(ID3_VALUE));
 	}
 
-	public void queryNotIncludeSet(IndexedHashMap<String, TestEntity> store) {
-		putDefaultTestEntities(store);
-		var p1 = QueryPredicate.notInclude(TestEntity.FIELD_SOMESET, SET22_VALUE);
-		var result = store.keySet(p1);
+	@Test
+	public void queryNotIncludeSetByField() {
+		var store = new IndexedHashMap<String, TestEntity>();
+		putDefaultTestEntities(store);		
+		var has = store.keySetPredicate(TestEntity::getSomeSetForIndex, k -> k.equals(SET22_VALUE));
+		var result = store.keySet();
+		result.removeAll(has);
 		assertEquals(2, result.size());
 		assertTrue(result.contains(ID1_VALUE));
 		assertTrue(!result.contains(ID2_VALUE));
@@ -299,17 +329,17 @@ public class StoreTest {
 	}
 
 	@Test
-	public void queryNotIncludeSetByField() {
-		var store = new IndexedHashMap<String, TestEntity>();
-		store.addQueryField(TestEntity.FIELD_SOMESET, TestEntity::getSomeSetForIndex);
-		queryNotIncludeSet(store);
-	}
-
-	@Test
 	public void queryNotIncludeSetByIndex() {
 		var store = new IndexedHashMap<String, TestEntity>();
 		store.addIndexEqual(TestEntity.FIELD_SOMESET, TestEntity::getSomeSetForIndex);
-		queryNotIncludeSet(store);
+		putDefaultTestEntities(store);		
+		var has = store.keySetIndexEq(TestEntity.FIELD_SOMESET, SET22_VALUE);
+		var result = store.keySet();
+		result.removeAll(has);
+		assertEquals(2, result.size());
+		assertTrue(result.contains(ID1_VALUE));
+		assertTrue(!result.contains(ID2_VALUE));
+		assertTrue(result.contains(ID3_VALUE));
 	}
 
 }

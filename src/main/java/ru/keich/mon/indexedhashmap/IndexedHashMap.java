@@ -14,8 +14,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import ru.keich.mon.indexedhashmap.query.QueryPredicate;
-
 /*
  * Copyright 2025 the original author or authors.
  *
@@ -36,8 +34,6 @@ public class IndexedHashMap<K, T> implements Map<K, T> {
 
 	private Map<K, T> cache = new ConcurrentHashMap<>();
 	private Map<String, Index<K, T>> index = new HashMap<>();
-	private Map<String, Query<T>> query = new HashMap<>();
-
 	private AtomicLong metricAdded = new AtomicLong(0);
 	private AtomicLong metricUpdated = new AtomicLong(0);
 	private AtomicLong metricRemoved = new AtomicLong(0);
@@ -65,13 +61,9 @@ public class IndexedHashMap<K, T> implements Map<K, T> {
 	public void addIndexUniqSorted(String name, Function<T, Set<Object>> mapper) {
 		index.put(name, new IndexSortedUniq<K, T>(mapper));
 	}
-
-	public void addQueryFieldLong(String name, Function<T, Long> mapper) {
-		query.put(name, new QueryLong<T>(mapper));
-	}
-
-	public void addQueryField(String name, Function<T, Set<Object>> mapper) {
-		query.put(name, new QueryObject<T>(mapper));
+	
+	public Set<String> getIndexNames() {
+		return index.keySet();
 	}
 
 	@Override
@@ -151,69 +143,41 @@ public class IndexedHashMap<K, T> implements Map<K, T> {
 		return out;
 	}
 	
-
-	private Set<K> findByQuery(QueryPredicate qp) {
-		var fieldName = qp.getName();
-		var mapper = query.get(fieldName);
-		final Predicate<Entry<K, T>> qPredicate;
-		if (qp.getOperator() == QueryPredicate.Operator.NI) {
-			qPredicate = entry -> !mapper.apply(entry.getValue())
-					.contains(qp.getValue());
-		} else {
-			qPredicate = entry -> mapper.apply(entry.getValue())
-					.stream()
-					.filter(qp.getPredicate())
-					.findAny()
-					.isPresent();
-		}
+	public Set<K> keySetPredicate(Function<T, Set<Object>> mapper, Predicate<Object> predicate) {
+		Predicate<Map.Entry<K, T>> qPredicate = entry -> mapper.apply(entry.getValue())
+				.stream()
+				.filter(predicate)
+				.findAny()
+				.isPresent();
 		return cache.entrySet().stream()
 				.filter(qPredicate)
 				.map(e -> e.getKey())
 				.collect(Collectors.toSet());
 	}
-
-	private Set<K> findByIndex(QueryPredicate qp) {
-		var fieldName = qp.getName();
-		switch (qp.getOperator()) {
-		case EQ:
-			return index.get(fieldName).get(qp.getValue());
-		case NE:
-		case CO:
-		case NC:
-			return index.get(fieldName).findByKey(qp.getPredicate());
-		case NI:
-			var t = index.get(fieldName).get(qp.getValue());
-			var r = index.get(fieldName).valueSet();
-			r.removeAll(t);
-			return r;
-		case LT:
-			return index.get(fieldName).getBefore(qp.getValue());
-		case GT:
-			return index.get(fieldName).getAfter(qp.getValue());
-		case GE:
-			return index.get(fieldName).getAfterEqual(qp.getValue());
-		default:
-			return new HashSet<>();
-		}
-	}
-
-	public Set<K> keySet(QueryPredicate predicate) {
-		var fieldName = predicate.getName();
-		Set<K> ret;
-		if (index.containsKey(fieldName)) {
-			ret = findByIndex(predicate);
-		} else if (query.containsKey(fieldName)) {
-			ret = findByQuery(predicate);
-		} else {
-			throw new RuntimeException("Can't query by field \"" + fieldName + "\"");
-		}
-		return ret;
-	}
-
+	
 	public Set<K> keySetIndexEq(String fieldName, Object value) {
 		return index.get(fieldName).get(value);
 	}
-	
+
+	public Set<K> keySetIndexPredicate(String fieldName, Predicate<Object> predicate) {
+		return index.get(fieldName).findByKey(predicate);
+	}
+
+	public Set<K> keySetIndexAll(String fieldName, Object value) {
+		return index.get(fieldName).valueSet();
+	}
+
+	public Set<K> keySetIndexGetBefore(String fieldName, Object value) {
+		return index.get(fieldName).getBefore(value);
+	}
+
+	public Set<K> keySetIndexGetAfterEqual(String fieldName, Object value) {
+		return index.get(fieldName).getAfterEqual(value);
+	}
+	public Set<K> keySetIndexGetAfter(String fieldName, Object value) {
+		return index.get(fieldName).getAfter(value);
+	}
+
 	@Override
 	public int size() {
 		return cache.size();
@@ -244,19 +208,25 @@ public class IndexedHashMap<K, T> implements Map<K, T> {
 		throw new UnsupportedOperationException("Method clear is unsupported");
 	}
 
+    /**
+     * Returns a {@link Set} copy of the keys contained in this map.
+     *
+     * @return a set copy of the keys contained in this map
+     */
+	
 	@Override
 	public Set<K> keySet() {
-		return cache.keySet();
+		return new HashSet<K>(cache.keySet());
 	}
 
 	@Override
 	public Collection<T> values() {
-		return cache.values();
+		throw new UnsupportedOperationException("Method values is unsupported");
 	}
 
 	@Override
 	public Set<Entry<K, T>> entrySet() {
-		return cache.entrySet();
+		throw new UnsupportedOperationException("Method entrySet is unsupported");
 	}
 	
 	public Metrics getMetrics() {

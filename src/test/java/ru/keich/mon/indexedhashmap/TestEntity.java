@@ -69,7 +69,11 @@ public class TestEntity {
 		return Collections.singleton(e.getName());
 	}
 
-	public static Long getVersionForIndex(TestEntity e) {
+	public static Set<Object> getVersionForIndex(TestEntity e) {
+		return Collections.singleton(e.getVersion());
+	}
+	
+	public static Long getVersionForIndexLong(TestEntity e) {
 		return e.getVersion();
 	}
 
