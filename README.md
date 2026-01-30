@@ -22,65 +22,66 @@ Used as an in-memory key-value database for Objects.
   	<dependency>
   		<groupId>ru.keich.mon</groupId>
   		<artifactId>IndexedHashMap</artifactId>
-  		<version>0.2.0</version>
+  		<version>0.2.2</version>
   	</dependency>
 ```
 
 ## Usage 
 
-1. Create class extended BaseEntity
+1. Create class
 
 ```java
-	public static class TestEntity {
-	    private final String name;
-	    private final Long version;
+	import java.util.Collections;
+	import java.util.Set;
 
-	    public TestEntity(String name, Long version) {
-	        this.name = name;
-	        this.version = version;
-	    }
-	    
-	    public static final String FIELD_NAME = "name";
-	    
-	    public String getName() {
-	    	return name;
-	    }
-	      
-	    public static Set<Object> getNameForIndex(TestEntity e) {
-	        return Collections.singleton(e.getName());
-	    } 
+	public class TestEntity {
+		private final String name;
+
+		public TestEntity(String name) {
+			this.name = name;
+		}
+
+		public static final String FIELD_NAME = "name";
+
+		public String getName() {
+			return name;
+		}
+
+		public static Set<Object> getNameForIndex(TestEntity e) {
+			return Collections.singleton(e.getName());
+		}
 	}
 ```
 
 2. Create instance of IndexedHashMap
 
 ```java
-IndexedHashMap<String, TestEntity> store = new IndexedHashMap<>(null,"DBName");
+	IndexedHashMap<String, TestEntity> store = new IndexedHashMap<>();
 ```
 
 3. Put and get data
 
 ```java
-		TestEntity entity = new TestEntity("Hello word", 1L);
-		store.put("key1", entity);
-		TestEntity result = store.get("key1");
+	TestEntity entity = new TestEntity("Hello world");
+	store.put("key1", entity);
+	TestEntity result = store.get("key1");
 ```
 
 4. Lock object for insert or update
 
 ```java
-		store.compute("key1", (k, obj) -> {
-		    // Object with key1 missing
-		    if(obj == null) {
-		        //Insert
-		        return new TestEntity("Hello word", 1L);
-		    }
-		    // Object exists
-		    // Replace
-		    return new TestEntity("Hello word 2", 1L);
-		    // Or remove
-		    //return null;
-		});
+	store.compute("key1", (k, obj) -> {
+	    // Object with key1 missing
+	    if(obj == null) {
+	        //Insert
+	        return new TestEntity("Hello world 1");
+	    }
+	    // Object exists
+	    // Replace
+	    return new TestEntity("Hello wolrd 2");
+	    // Or remove
+	    //return null;
+	});
 ```
 
 ## Work with indexes
@@ -88,43 +89,30 @@ IndexedHashMap<String, TestEntity> store = new IndexedHashMap<>(null,"DBName");
 1. Determine what data to put in the index 
 
 ```java
-public static final String FIELD_NAME = "name";
+	public static final String FIELD_NAME = "name";
       
-public static Set<Object> getNameForIndex(TestEntity e) {
-	return Collections.singleton(e.getName());
-}       
+	public static Set<Object> getNameForIndex(TestEntity e) {
+		return Collections.singleton(e.getName());
+	}       
 ```
 2. Do before insert data
 
 ```java
-store.addIndexEqual(TestEntity.FIELD_NAME, TestEntity::getNameForIndex);
+	store.addIndexEqual(TestEntity.FIELD_NAME, TestEntity::getNameForIndex);
 ```
 
 3. Query objects from store
 
 ```java
-QueryPredicate repdicate = QueryPredicate.notEqual(TestEntity.FIELD_NAME, "Hello world");
-Set<String> result = store.keySet(repdicate);
-result.forEach(key -> {
-	System.out.println(store.get(key));
-});
+	//Simple equal
+	Set<String> result1 = store.keySetIndexEq(TestEntity.FIELD_NAME, "Hello world");
+	//Search by index with predicate
+	Predicate<Object> repdicate = (t) -> t.toString().contains("world");
+	Set<String> result2 = store.keySetIndexPredicate(TestEntity.FIELD_NAME, repdicate);
+	result2.forEach(key -> {
+		System.out.println(store.get(key));
+	});
 ```
-
-### Index data type support
-
-Any object with hash and equal or any object implements Comparable.(depends on predicate)
-
-| Operator | Description          | Long | Class String  | Class Map.Entry     | Class Set                     |
-| -------- | -------------------- | -----| ------------- | ------------------- | ----------------------------- |
-| EQ       | Equal                | ok   | ok            | The key is equal and the value is equal | A object in set is equal the specified object  |
-| NE       | Not equal            | ok   | ok            | Undefined behavior  | Undefined behavior. Use NI    |
-| LT       | Less than            | ok   | ok            | Exception           | Exception                     |
-| GT       | Gather than          | ok   | ok            | Exception           | Exception                     |
-| GE       | Gather equal         | ok   | ok            | Exception           | Exception                     |
-| CO       | Contain(Like)        | Undefined behavior | The string contains the specified string | The key is equal and the value contains the specified string  | A string in the set contains the specified string |
-| NC       | Not contain(Not Like)| Undefined behavior | Vice versa CO |  The key is equal and the value not contains the specified string  | Undefined behavior |
-| NI       | Not include(uses for Set)  | Undefined behavior  |    Vice versa CO   |   Undefined behavior  |  Return object with set not contains object |
-
 
 ### Index types
 
@@ -136,22 +124,7 @@ Any object with hash and equal or any object implements Comparable.(depends on p
 | IndexSortedUniq | Index from TreeMap for uniq a objects implements Comparable |
 | IndexSmallInt   | Index for Integer with small range(Uses array) |
 
-## Work without indexes
 
-1. Do before insert data
-
-```java
-store.addQueryField(TestEntity.FIELD_NAME, TestEntity::getSomeSetForIndex);
-```
-2. Query objects from store
-
-```java
-QueryPredicate predicate = Predicates.notEqual(TestEntity.FIELD_NAME, "Hello world");
-Set<String> result = store.keySet(predicate);
-result.forEach(key -> {
-	System.out.println(store.get(key));
-});
-```
 
 
 
