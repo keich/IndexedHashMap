@@ -107,8 +107,8 @@ Used as an in-memory key-value database for Objects.
 	//Simple equal
 	Set<String> result1 = store.keySetIndexEq(TestEntity.FIELD_NAME, "Hello world");
 	//Search by index with predicate
-	Predicate<Object> repdicate = (t) -> t.toString().contains("world");
-	Set<String> result2 = store.keySetIndexPredicate(TestEntity.FIELD_NAME, repdicate);
+	Predicate<Object> predicate = (t) -> t.toString().contains("world");
+	Set<String> result2 = store.keySetIndexPredicate(TestEntity.FIELD_NAME, predicate);
 	result2.forEach(key -> {
 		System.out.println(store.get(key));
 	});
