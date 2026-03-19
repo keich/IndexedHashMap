@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -26,6 +27,7 @@ import java.util.function.Predicate;
 public class IndexLongUniq<K, T> implements Index<K, T> {
 	private final Function<T, Long> mapper;
 	private final SortedMap<Object, K> objects = new TreeMap<>();
+	private final ReentrantLock lock = new ReentrantLock();
 
 	public IndexLongUniq(Function<T, Long> mapper) {
 		this.mapper = mapper;
@@ -43,88 +45,138 @@ public class IndexLongUniq<K, T> implements Index<K, T> {
 	}
 
 	@Override
-	public synchronized Set<K> findByKey(Predicate<Object> predicate) {
-		var out = new HashSet<K>();
-		for (var entry : objects.entrySet()) {
-			if (predicate.test(entry.getKey())) {
-				out.add(entry.getValue());
+	public Set<K> findByKey(Predicate<Object> predicate) {
+		lock.lock();
+		try {
+			var out = new HashSet<K>();
+			for (var entry : objects.entrySet()) {
+				if (predicate.test(entry.getKey())) {
+					out.add(entry.getValue());
+				}
 			}
+			return out;
+		} finally {
+			lock.unlock();
 		}
-		return out;
 	}
 
 	@Override
-	public synchronized void append(K id, T entity) {
-		put(mapper.apply(entity), id);
-	}
-
-	@Override
-	public synchronized void remove(K id, T entity) {
-		del(mapper.apply(entity), id);
-	}
-
-	@Override
-	public synchronized Set<K> get(Object key) {
-		var out = new HashSet<K>();
-		var val = objects.get(key);
-		if (val != null) {
-			out.add(val);
+	public void append(K id, T entity) {
+		lock.lock();
+		try {
+			put(mapper.apply(entity), id);
+		} finally {
+			lock.unlock();
 		}
-		return out;
 	}
 
 	@Override
-	public synchronized Set<K> getBefore(Object key) {
-		var out = new HashSet<K>();
-		for (var val : objects.headMap(key).values()) {
-			out.add(val);
+	public void remove(K id, T entity) {
+		lock.lock();
+		try {
+			del(mapper.apply(entity), id);
+		} finally {
+			lock.unlock();
 		}
-		return out;
 	}
 
 	@Override
-	public synchronized Set<K> getAfter(Object key) {
-		var out = new HashSet<K>();
-		var iter = objects.tailMap(key).entrySet().iterator();
-		if(iter.hasNext()) {
-			var e = iter.next();
-			if(!e.getKey().equals(key)) {
-				out.add(e.getValue());
+	public Set<K> get(Object key) {
+		lock.lock();
+		try {
+			var out = new HashSet<K>();
+			var val = objects.get(key);
+			if (val != null) {
+				out.add(val);
 			}
+			return out;
+		} finally {
+			lock.unlock();
 		}
-		while(iter.hasNext()) {
-			out.add(iter.next().getValue());
+	}
+
+	@Override
+	public Set<K> getBefore(Object key) {
+		lock.lock();
+		try {
+			var out = new HashSet<K>();
+			for (var val : objects.headMap(key).values()) {
+				out.add(val);
+			}
+			return out;
+		} finally {
+			lock.unlock();
 		}
-		return out;
+	}
+
+	@Override
+	public Set<K> getAfter(Object key) {
+		lock.lock();
+		try {
+			var out = new HashSet<K>();
+			var iter = objects.tailMap(key).entrySet().iterator();
+			if(iter.hasNext()) {
+				var e = iter.next();
+				if(!e.getKey().equals(key)) {
+					out.add(e.getValue());
+				}
+			}
+			while(iter.hasNext()) {
+				out.add(iter.next().getValue());
+			}
+			return out;
+		} finally {
+			lock.unlock();
+		}
 	}
 	
 	@Override
-	public synchronized Set<K> getAfterEqual(Object key) {
-		var out = new HashSet<K>();
-		for (var val : objects.tailMap(key).values()) {
-			out.add(val);
+	public Set<K> getAfterEqual(Object key) {
+		lock.lock();
+		try {
+			var out = new HashSet<K>();
+			for (var val : objects.tailMap(key).values()) {
+				out.add(val);
+			}
+			return out;
+		} finally {
+			lock.unlock();
 		}
-		return out;
 	}
 
 	@Override
-	public synchronized Set<K> valueSet() {
-		return new HashSet<K>(objects.values());
+	public Set<K> valueSet() {
+		lock.lock();
+		try {
+			return new HashSet<K>(objects.values());
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	@Override
-	public synchronized int getSize() {
-		return objects.size();
+	public int getSize() {
+		lock.lock();
+		try {
+			return objects.size();
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	@Override
-	public synchronized void removeOldAndAppend(K id, T oldObj, T newObj) {
-		var oldVal = mapper.apply(oldObj);
-		var newVal = mapper.apply(newObj);
+	public void removeOldAndAppend(K id, T oldObj, T newObj) {
+		lock.lock();
+		try {
+			var oldVal = mapper.apply(oldObj);
+			var newVal = mapper.apply(newObj);
 
-		if (!oldVal.equals(newVal)) {
-			del(oldVal, id);
-			put(newVal, id);
+			if (!oldVal.equals(newVal)) {
+				del(oldVal, id);
+				put(newVal, id);
+			}
+		} finally {
+			lock.unlock();
 		}
 	}
 

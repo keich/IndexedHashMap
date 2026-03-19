@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -26,6 +27,7 @@ import java.util.function.Predicate;
 public class IndexEqual<K, T> implements Index<K, T> {
 	private final Function<T, Set<Object>> mapper;
 	private final Map<Object, Set<K>> objects = new HashMap<>();
+	private final ReentrantLock lock = new ReentrantLock();
 
 	public IndexEqual(Function<T, Set<Object>> mapper) {
 		this.mapper = mapper;
@@ -54,34 +56,54 @@ public class IndexEqual<K, T> implements Index<K, T> {
 	}
 
 	@Override
-	public synchronized Set<K> findByKey(Predicate<Object> predicate) {
-		var out = new HashSet<K>();
-		for (var entry : objects.entrySet()) {
-			if (predicate.test(entry.getKey())) {
-				out.addAll(entry.getValue());
+	public Set<K> findByKey(Predicate<Object> predicate) {
+		lock.lock();
+		try {
+			var out = new HashSet<K>();
+			for (var entry : objects.entrySet()) {
+				if (predicate.test(entry.getKey())) {
+					out.addAll(entry.getValue());
+				}
 			}
+			return out;
+		} finally {
+		    lock.unlock();
 		}
-		return out;
 	}
 
 	@Override
-	public synchronized void append(K id, T obj) {
-		mapper.apply(obj).forEach(key -> put(key, id));
-	}
-
-	@Override
-	public synchronized void remove(K id, T obj) {
-		mapper.apply(obj).forEach(key -> del(key, id));
-	}
-
-	@Override
-	public synchronized Set<K> get(Object key) {
-		var out = new HashSet<K>();
-		var val = objects.get(key);
-		if (val != null) {
-			out.addAll(val);
+	public void append(K id, T obj) {
+		lock.lock();
+		try {
+			mapper.apply(obj).forEach(key -> put(key, id));
+		} finally {
+		    lock.unlock();
 		}
-		return out;
+	}
+
+	@Override
+	public void remove(K id, T obj) {
+		lock.lock();
+		try {
+			mapper.apply(obj).forEach(key -> del(key, id));
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	@Override
+	public Set<K> get(Object key) {
+		lock.lock();
+		try {
+			var out = new HashSet<K>();
+			var val = objects.get(key);
+			if (val != null) {
+				out.addAll(val);
+			}
+			return out;
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	@Override
@@ -100,34 +122,49 @@ public class IndexEqual<K, T> implements Index<K, T> {
 	}
 
 	@Override
-	public synchronized Set<K> valueSet() {
-		var out = new HashSet<K>();
-		var entries = objects.entrySet();
-		for (var entry : entries) {
-			out.addAll(entry.getValue());
+	public Set<K> valueSet() {
+		lock.lock();
+		try {
+			var out = new HashSet<K>();
+			var entries = objects.entrySet();
+			for (var entry : entries) {
+				out.addAll(entry.getValue());
+			}
+			return out;
+		} finally {
+			lock.unlock();
 		}
-		return out;
 	}
 
 	@Override
-	public synchronized int getSize() {
-		return objects.size();
+	public int getSize() {
+		lock.lock();
+		try {
+			return objects.size();
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	@Override
-	public synchronized void removeOldAndAppend(K id, T oldObj, T newObj) {
-		var oldSet = mapper.apply(oldObj);
-		var newSet = mapper.apply(newObj);
+	public void removeOldAndAppend(K id, T oldObj, T newObj) {
+		lock.lock();
+		try {
+			var oldSet = mapper.apply(oldObj);
+			var newSet = mapper.apply(newObj);
 
-		for (var key : oldSet) {
-			if (!newSet.contains(key)) {
-				del(key, id);
+			for (var key : oldSet) {
+				if (!newSet.contains(key)) {
+					del(key, id);
+				}
 			}
-		}
-		for (var key : newSet) {
-			if (!oldSet.contains(key)) {
-				put(key, id);
+			for (var key : newSet) {
+				if (!oldSet.contains(key)) {
+					put(key, id);
+				}
 			}
+		} finally {
+			lock.unlock();
 		}
 	}
 

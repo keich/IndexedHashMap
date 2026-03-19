@@ -2,6 +2,7 @@ package ru.keich.mon.indexedhashmap;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -26,6 +27,7 @@ public class IndexSmallInt<K, T> implements Index<K, T> {
 	private final Function<T, Integer> mapper;
 	private final HashSet<K> objects[];
 	private final int size;
+	private final ReentrantLock lock = new ReentrantLock();
 
 	@SuppressWarnings("unchecked")
 	public IndexSmallInt(Function<T, Integer> mapper, int size) {
@@ -46,84 +48,133 @@ public class IndexSmallInt<K, T> implements Index<K, T> {
 	}
 
 	@Override
-	public synchronized Set<K> findByKey(Predicate<Object> predicate) {
-		var out = new HashSet<K>();
-		for (Integer i = 0; i < size; i++) {
-			if (predicate.test(i)) {
+	public Set<K> findByKey(Predicate<Object> predicate) {
+		lock.lock();
+		try {
+			var out = new HashSet<K>();
+			for (Integer i = 0; i < size; i++) {
+				if (predicate.test(i)) {
+					out.addAll(objects[i]);
+				}
+			}
+			return out;
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	@Override
+	public void append(K id, T obj) {
+		lock.lock();
+		try {
+			put(mapper.apply(obj), id);
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	@Override
+	public void remove(K id, T obj) {
+		lock.lock();
+		try {
+			del(mapper.apply(obj), id);
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	@Override
+	public Set<K> get(Object key) {
+		lock.lock();
+		try {
+			Integer val = (Integer) key;
+			return new HashSet<K>(objects[val]);
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	@Override
+	public Set<K> getBefore(Object key) {
+		lock.lock();
+		try {
+			Integer val = (Integer) key;
+			var out = new HashSet<K>();
+			for (int i = 0; i < val; i++) {
 				out.addAll(objects[i]);
 			}
+			return out;
+		} finally {
+			lock.unlock();
 		}
-		return out;
 	}
 
 	@Override
-	public synchronized void append(K id, T obj) {
-		put(mapper.apply(obj), id);
-	}
-
-	@Override
-	public synchronized void remove(K id, T obj) {
-		del(mapper.apply(obj), id);
-	}
-
-	@Override
-	public synchronized Set<K> get(Object key) {
-		Integer val = (Integer) key;
-		return new HashSet<K>(objects[val]);
-	}
-
-	@Override
-	public synchronized Set<K> getBefore(Object key) {
-		Integer val = (Integer) key;
-		var out = new HashSet<K>();
-		for (int i = 0; i < val; i++) {
-			out.addAll(objects[i]);
+	public Set<K> getAfter(Object key) {
+		lock.lock();
+		try {
+			Integer val = (Integer) key;
+			var out = new HashSet<K>();
+			for (int i = val + 1; i < size; i++) {
+				out.addAll(objects[i]);
+			}
+			return out;
+		} finally {
+			lock.unlock();
 		}
-		return out;
 	}
 
 	@Override
-	public synchronized Set<K> getAfter(Object key) {
-		Integer val = (Integer) key;
-		var out = new HashSet<K>();
-		for (int i = val + 1; i < size; i++) {
-			out.addAll(objects[i]);
+	public Set<K> getAfterEqual(Object key) {
+		lock.lock();
+		try {
+			Integer val = (Integer) key;
+			var out = new HashSet<K>();
+			for (int i = val; i < size; i++) {
+				out.addAll(objects[i]);
+			}
+			return out;
+		} finally {
+			lock.unlock();
 		}
-		return out;
 	}
 
 	@Override
-	public synchronized Set<K> getAfterEqual(Object key) {
-		Integer val = (Integer) key;
-		var out = new HashSet<K>();
-		for (int i = val; i < size; i++) {
-			out.addAll(objects[i]);
+	public Set<K> valueSet() {
+		lock.lock();
+		try {
+			var out = new HashSet<K>();
+			for (int i = 0; i < size; i++) {
+				out.addAll(objects[i]);
+			}
+			return out;
+		} finally {
+			lock.unlock();
 		}
-		return out;
 	}
 
 	@Override
-	public synchronized Set<K> valueSet() {
-		var out = new HashSet<K>();
-		for (int i = 0; i < size; i++) {
-			out.addAll(objects[i]);
+	public int getSize() {
+		lock.lock();
+		try {
+			return size;
+		} finally {
+			lock.unlock();
 		}
-		return out;
 	}
 
 	@Override
-	public synchronized int getSize() {
-		return size;
-	}
-
-	@Override
-	public synchronized void removeOldAndAppend(K id, T oldObj, T newObj) {
-		var oldVal = mapper.apply(oldObj);
-		var newVal = mapper.apply(newObj);
-
-		if (!oldVal.equals(newVal)) {
-			del(oldVal, id);
-			put(newVal, id);
+	public void removeOldAndAppend(K id, T oldObj, T newObj) {
+		try {
+			var oldVal = mapper.apply(oldObj);
+			var newVal = mapper.apply(newObj);
+			if (!oldVal.equals(newVal)) {
+				del(oldVal, id);
+				put(newVal, id);
+			}
+			lock.lock();
+		} finally {
+			lock.unlock();
 		}
 	}
 
