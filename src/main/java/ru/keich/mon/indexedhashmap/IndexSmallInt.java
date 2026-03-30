@@ -165,6 +165,7 @@ public class IndexSmallInt<K, T> implements Index<K, T> {
 
 	@Override
 	public void removeOldAndAppend(K id, T oldObj, T newObj) {
+		lock.lock();
 		try {
 			var oldVal = mapper.apply(oldObj);
 			var newVal = mapper.apply(newObj);
@@ -172,7 +173,6 @@ public class IndexSmallInt<K, T> implements Index<K, T> {
 				del(oldVal, id);
 				put(newVal, id);
 			}
-			lock.lock();
 		} finally {
 			lock.unlock();
 		}
