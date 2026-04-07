@@ -163,7 +163,7 @@ public class IndexedHashMap<K, T> implements Map<K, T> {
 		return index.get(fieldName).findByKey(predicate);
 	}
 
-	public Set<K> keySetIndexAll(String fieldName, Object value) {
+	public Set<K> keySetIndexAll(String fieldName) {
 		return index.get(fieldName).valueSet();
 	}
 
