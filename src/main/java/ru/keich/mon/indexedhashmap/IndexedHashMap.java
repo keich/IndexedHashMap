@@ -119,12 +119,12 @@ public class IndexedHashMap<K, T> implements Map<K, T> {
 	
 	@Override
 	public T computeIfAbsent(K key, Function<? super K, ? extends T> mappingFunction) {
-		return compute(key, (k, v) -> (v == null) ? mappingFunction.apply(k) : null);
+		return compute(key, (k, old) -> (old == null) ? mappingFunction.apply(k) : old);
 	}
 
 	@Override
 	public T computeIfPresent(K key, BiFunction<? super K, ? super T, ? extends T> remappingFunction) {
-		return compute(key, (k, v) -> (v != null) ? remappingFunction.apply(key, v) : null);
+		return compute(key, (k, old) -> (old != null) ? remappingFunction.apply(key, old) : old);
 	}
 
 	@Override
