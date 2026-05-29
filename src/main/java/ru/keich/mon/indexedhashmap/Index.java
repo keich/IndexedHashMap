@@ -1,5 +1,6 @@
 package ru.keich.mon.indexedhashmap;
 
+import java.util.Collection;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -25,6 +26,8 @@ public interface Index<K, T> {
 	public void remove(K id, T entity);
 
 	public Set<K> get(Object key);
+	
+	public Set<K> getAll(Collection<Object> key);
 
 	public Set<K> getBefore(Object key);
 	

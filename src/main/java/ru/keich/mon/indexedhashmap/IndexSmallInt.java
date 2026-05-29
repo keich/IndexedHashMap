@@ -1,5 +1,6 @@
 package ru.keich.mon.indexedhashmap;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
@@ -89,6 +90,21 @@ public class IndexSmallInt<K, T> implements Index<K, T> {
 		try {
 			Integer val = (Integer) key;
 			return new HashSet<K>(objects[val]);
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	@Override
+	public Set<K> getAll(Collection<Object> keys) {
+		lock.lock();
+		try {
+			var out = new HashSet<K>();
+			for (var key : keys) {
+				Integer ikey = (Integer) key;
+				out.addAll(objects[ikey]);
+			}
+			return out;
 		} finally {
 			lock.unlock();
 		}

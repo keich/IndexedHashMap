@@ -1,5 +1,6 @@
 package ru.keich.mon.indexedhashmap;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.SortedMap;
@@ -100,6 +101,23 @@ public class IndexSorted<K, T> implements Index<K, T> {
 			var val = objects.get(key);
 			if (val != null) {
 				out.addAll(val);
+			}
+			return out;
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	@Override
+	public Set<K> getAll(Collection<Object> keys) {
+		lock.lock();
+		try {
+			var out = new HashSet<K>();
+			for (var key : keys) {
+				var val = objects.get(key);
+				if (val != null) {
+					out.addAll(val);
+				}
 			}
 			return out;
 		} finally {

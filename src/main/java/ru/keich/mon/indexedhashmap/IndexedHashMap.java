@@ -167,6 +167,10 @@ public class IndexedHashMap<K, T> implements Map<K, T> {
 	public Set<K> keySetIndexEq(String fieldName, Object value) {
 		return index.get(fieldName).get(value);
 	}
+	
+	public Set<K> keySetIndexEqAll(String fieldName, Collection<Object> value) {
+		return index.get(fieldName).getAll(value);
+	}
 
 	public Set<K> keySetIndexPredicate(String fieldName, Predicate<Object> predicate) {
 		return index.get(fieldName).findByKey(predicate);
